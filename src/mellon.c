@@ -34,7 +34,7 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
 /**
  * List file attributes
  */
-static int mellon_getattr(const char *path, struct stat *st){
+static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_info *fi){
     st->st_uid = getuid();
     st->st_gid = getgid();
     st->st_atime = time(NULL);
@@ -51,9 +51,10 @@ static int mellon_getattr(const char *path, struct stat *st){
     return 0;
 }
 
-static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
-    filler(buffer, ".", NULL, 1, FUSE_FILL_DIR_PLUS);
-    filler(buffer, "..", NULL, 1, FUSE_FILL_DIR_PLUS);
+static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
+    printf("Mellon: listing files\n");
+    filler(buffer, ".", NULL, 1, flags);
+    filler(buffer, "..", NULL, 1, flags);
     return 0;
 }
 
