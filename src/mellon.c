@@ -24,6 +24,23 @@ int gen2FACode(){
 	}*/
 }
 
-int main(){
+static int mellon_open(const char *file_name, struct fuse_file_info *fi){
+
+}
+
+static int mellon_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi){
+
+}
+
+
+static struct fuse_operations mellon_ops = {
+    .init = 0,                                  //called when mounting the filesystem
+    .getattr = mellon_getattr,                  
+    .open = mellon_open                         //called when opening a file
+};
+
+int main(int argc, char *argv[]){
+
+    fuse_main(argc, argv, &mellon_ops, NULL);
 
 }
