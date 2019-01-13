@@ -55,6 +55,9 @@ static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, o
     printf("Mellon: listing files\n");
     filler(buffer, ".", NULL, 1, flags);
     filler(buffer, "..", NULL, 1, flags);
+    if(!strcmp(path, "/")){
+        filler(buffer, "dummy_file", NULL, 1, flags);
+    }
     return 0;
 }
 
