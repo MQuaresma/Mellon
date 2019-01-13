@@ -7,6 +7,8 @@
 #include<fuse.h>
 #include<stdio.h>
 #include<stdlib.h>
+#include<unistd.h>
+#include<string.h>
 #include<fcntl.h>
 #define MOD 10000
 
@@ -29,14 +31,37 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
 
 }
 
-static int mellon_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi){
+/**
+ * List file attributes
+ */
+static int mellon_getattr(const char *path, struct stat *st){
+    st->st_uid = getuid();
+    st->st_gid = getgid();
+    st->st_atime = time(NULL);
+    st->st_mtime = time(NULL);
 
+    if(!strcmp(path, "/")){ //root directory relative to mount point
+        st->st_mode =  S_IFDIR | 0755;
+        st->st_nlink = 2;  //. and ..
+    }else{
+        st->st_mode = S_IFREG | 0644; 
+        st->st_size = 1024;
+        st->st_nlink = 1;
+    }
+    return 0;
+}
+
+static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
+    filler(buffer, ".", NULL, 0);
+    filler(buffer, "..", NULL, 0);
+    return 0;
 }
 
 
 static struct fuse_operations mellon_ops = {
     .init = 0,                                  //called when mounting the filesystem
     .getattr = mellon_getattr,                  
+    .readdir = read_mellon,                     //called when listing a directory
     .open = mellon_open                         //called when opening a file
 };
 
