@@ -6,6 +6,7 @@
 
 #include<fuse.h>
 #include<stdio.h>
+#include<stdlib.h>
 #include<fcntl.h>
 #define MOD 10000
 
@@ -40,6 +41,10 @@ static struct fuse_operations mellon_ops = {
 };
 
 int main(int argc, char *argv[]){
+    struct fuse_args args;
+
+    if(fuse_opt_parse(NULL, NULL, NULL, NULL)==-1)
+        exit(1);
 
     fuse_main(argc, argv, &mellon_ops, NULL);
 
