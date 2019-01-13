@@ -52,8 +52,8 @@ static int mellon_getattr(const char *path, struct stat *st){
 }
 
 static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
-    filler(buffer, ".", NULL, 0);
-    filler(buffer, "..", NULL, 0);
+    filler(buffer, ".", NULL, 1, FUSE_FILL_DIR_PLUS);
+    filler(buffer, "..", NULL, 1, FUSE_FILL_DIR_PLUS);
     return 0;
 }
 
