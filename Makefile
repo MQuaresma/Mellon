@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall
-FUSEFLAGS=-D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse3 -L/usr/local/lib/x86_64-linux-gnu -lfuse3 -lpthread
+CFLAGS=-Wall -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse3 -L/usr/local/lib/x86_64-linux-gnu
+LINKERFLAGS=-lfuse3 -lpthread
 SRC_DIR=src
 BIN_DIR=bin
 DEPS=mellon.c
@@ -12,7 +12,7 @@ check_dirs:
 	@mkdir -p $(BIN_DIR)
 
 all: check_dirs $(SRC_DIR)/$(DEPS)
-	$(CC) $(CFLAGS) $(FUSEFLAGS) $(SRC_DIR)/$(DEPS) -o $(BIN)
+	$(CC) $(CFLAGS) $(SRC_DIR)/$(DEPS) -o $(BIN) $(LINKERFLAGS)
 	mv $(BIN) $(BIN_DIR)
 
 clean:
