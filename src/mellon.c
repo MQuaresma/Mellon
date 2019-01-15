@@ -49,7 +49,7 @@ static int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file
  * Change permissions of dir/file
  */
 static int mellon_chmod(const char *path, mode_t mode, struct fuse_file_info *fi){
-    if((fi && fchmod(fi->fh, mode)!=-1) || lchmod(path, mode)==-1) 
+    if((fi && fchmod(fi->fh, mode)!=-1) || chmod(path, mode)==-1) 
         return 0;
     else return -errno;
 }
@@ -81,6 +81,20 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
         filler(buffer, ".", NULL, 0, 0);
         filler(buffer, "..", NULL, 0, 0);
     }
+    return 0;
+}
+
+
+/**
+ * Create/touch files
+ */
+static int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi){
+    int fd = open(file_name, fi->flags, mode);
+
+    if(fd==-1)
+        return -errno;
+
+    fi->fh = fd;
     return 0;
 }
 

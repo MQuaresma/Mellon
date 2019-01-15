@@ -25,14 +25,14 @@ static struct fuse_operations mellon_ops = {
     .access = mellon_access,
     .getattr = mellon_getattr,                  
     .chown = mellon_chown,
-    .chmod = mellon_cmod,
+    .chmod = mellon_chmod,
     .readdir = mellon_readdir,                      //called when listing a directory
     .mkdir = mellon_mkdir,
     .rmdir = mellon_rmdir,
+    .create = mellon_create,
     .open = mellon_open,                            //called when opening a file
     .read = mellon_read
     /*.write = mellon_write,
-    .create = mellon_create,
     .rename = mellon_rename,
     */
 
