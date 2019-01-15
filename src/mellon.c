@@ -2,32 +2,9 @@
  * 
  *
  */
-#define FUSE_USE_VERSION 31
 
-#include<fuse.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include<errno.h>
-#include<unistd.h>
-#include<string.h>
-#include<fcntl.h>
-#define MOD 10000
 
-/**
- * Generate random number between 0000 and 9999
- * returns -1 if error occurs
- */
-int gen2FACode(){
-	return 1;
-	/*bytes fa_code_byte[sizeof(int)];
-	int fa_code;
-
-	if(RAND_bytes(fa_code_byte, sizeof(fa_code)) != 1){
-		fprintf(stderr, "Couldn't generated 2FA code, exiting...\n");
-		return -1;
-	}*/
-}
-
+#include "mellon.h"
 /**
  * Initial configurations for file system:
  *      - disable caching of various inode related info
@@ -39,7 +16,6 @@ static void *mellon_init(struct fuse_conn_info *conn, struct fuse_config *cfg){
 	cfg->negative_timeout = 0;
     return NULL;
 }
-
 
 /**
  * Check for access permissions (set with umask(0) call in main)
@@ -61,12 +37,21 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
 }
 
 /**
- * Change owner of file
+ * Change owner of dir/file
  */
 static int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi){
-	if(lchown(path, uid, gid)==-1)
-		return -errno;
-	return 0;
+    if((fi && fchown(fi->fh, uid, gid)!=-1) || lchown(path, uid, gid)==-1) 
+        return 0;
+    else return -errno;
+}
+
+/**
+ * Change permissions of dir/file
+ */
+static int mellon_chmod(const char *path, mode_t mode, struct fuse_file_info *fi){
+    if((fi && fchmod(fi->fh, mode)!=-1) || lchmod(path, mode)==-1) 
+        return 0;
+    else return -errno;
 }
 
 /**
@@ -97,6 +82,21 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
         filler(buffer, "..", NULL, 0, 0);
     }
     return 0;
+}
+
+/**
+ * Generate random number between 0000 and 9999
+ * returns -1 if error occurs
+ */
+int gen2FACode(){
+	return 1;
+	/*bytes fa_code_byte[sizeof(int)];
+	int fa_code;
+
+	if(RAND_bytes(fa_code_byte, sizeof(fa_code)) != 1){
+		fprintf(stderr, "Couldn't generated 2FA code, exiting...\n");
+		return -1;
+	}*/
 }
 
 /*
@@ -131,24 +131,6 @@ static int mellon_read(const char *file_name, char *buf, size_t size, off_t offs
     
 }
 
-
-static struct fuse_operations mellon_ops = {
-    .init = mellon_init,                                      //called when mounting the filesystem
-    .access = mellon_access,
-    .getattr = mellon_getattr,                  
-    .chown = mellon_chown,
-    .readdir = mellon_readdir,                      //called when listing a directory
-    .mkdir = mellon_mkdir,
-    .rmdir = mellon_rmdir,
-    .open = mellon_open,                            //called when opening a file
-    .read = mellon_read
-    /*.write = mellon_write,
-    .create = mellon_create,
-    .rename = mellon_rename,
-    .chmod = mellon_cmod,
-    */
-
-};
 
 int main(int argc, char *argv[]){
     umask(0); //remove all restrictions
