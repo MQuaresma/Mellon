@@ -31,7 +31,8 @@ int gen2FACode(){
 static int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fa_code, fh;
 
-    scanf("%d", &fa_code);
+    printf("Enter access code: \n");
+    scanf(" %d", &fa_code);
 
     if(fa_code == 1){
         fh = open(file_name, fi->flags);
@@ -40,6 +41,19 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
         else fi->fh = fh;           //set file handle to returned handle
     }else
         return -errno;
+}
+
+static int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+    char dummy_content[] = "hello, this is just some test content";
+    int len = strlen(dummy_content);
+    int c_read = (len-offset < size ? len-offset : size); //read max amount of chars possible
+
+    if(!strcmp(file_name, "/dummy_file") || !strcmp(file_name, "/dummy_file_1")){
+        memcpy(buf, dummy_content+offset, c_read);
+        return c_read; 
+    }else{
+        return -1;
+    }
 }
 
 /**
@@ -62,12 +76,16 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
     return 0;
 }
 
-static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
+/**
+ * List files in directory
+ */
+static int readdir_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
     printf("Mellon: listing files\n");
     if(!strcmp(path, "/")){
         filler(buffer, ".", NULL, 0, 0);                    //FIX: offset
-        filler(buffer, "dummy_file_2", NULL, 0, 0);
+        filler(buffer, "..", NULL, 0, 0);                    //FIX: offset
         filler(buffer, "dummy_file", NULL, 0, 0);
+        filler(buffer, "dummy_file_1", NULL, 0, 0);
     }
     return 0;
 }
@@ -76,7 +94,7 @@ static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, o
 static struct fuse_operations mellon_ops = {
     .init = 0,                                  //called when mounting the filesystem
     .getattr = mellon_getattr,                  
-    .readdir = read_mellon,                     //called when listing a directory
+    .readdir = readdir_mellon,                     //called when listing a directory
     .open = mellon_open                         //called when opening a file
 };
 
