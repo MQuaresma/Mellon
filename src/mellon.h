@@ -6,6 +6,7 @@
 #include<unistd.h>
 #include<string.h>
 #include<fcntl.h>
+#include<dirent.h>
 
 static void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
 static int mellon_statfs(const char*, struct statvfs *);
@@ -40,7 +41,7 @@ static struct fuse_operations mellon_ops = {
     .rename = mellon_rename,
     .create = mellon_create,
     .open = mellon_open,
-    .read = mellon_read
+    .read = mellon_read,
     .write = mellon_write
 };
 

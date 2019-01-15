@@ -98,10 +98,12 @@ static int mellon_opendir(const char *path, struct fuse_file_info *fi){
     struct current_dir *cdir = (struct current_dir *)malloc(sizeof(current_dir));
     if(cdir){
         cdir->dirp=opendir(path);
+
         if(cdir->dirp){
-            cdir->d_entry = 0;
+            cdir->d_entry = NULL;
             cdir->offset = 0;
             fi->fh = (unsigned long) cdir;  //cast for later use
+            return 0;
         }else{
             free(cdir);
             return -errno; 
@@ -113,15 +115,16 @@ static int mellon_opendir(const char *path, struct fuse_file_info *fi){
  * List files in directory
  */
 static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
-    struct current_dir *cdir = (struct current_dir *) fi->fh;
+    struct current_dir *cdir = (struct current_dir *) (uintptr_t)fi->fh;
     struct stat *st = (struct stat*)calloc(1, sizeof(struct stat));
 
     if(offset != cdir->offset){
         seekdir(cdir->dirp, offset);
         cdir->offset = offset;
+        cdir->d_entry = NULL;
     }
 
-    do{
+    while(1){
         cdir->d_entry = readdir(cdir->dirp);
 
         if(cdir->d_entry){
@@ -135,7 +138,7 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
 
             cdir->d_entry = NULL;
         }else break;
-    }while(c->d_entry);
+    }
 
     free(st);
     return 0;
