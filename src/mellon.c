@@ -7,6 +7,7 @@
 #include<fuse.h>
 #include<stdio.h>
 #include<stdlib.h>
+#include <errno.h>
 #include<unistd.h>
 #include<string.h>
 #include<fcntl.h>
@@ -28,7 +29,17 @@ int gen2FACode(){
 }
 
 static int mellon_open(const char *file_name, struct fuse_file_info *fi){
+    int fa_code, fh;
 
+    scanf("%d", &fa_code);
+
+    if(fa_code == 1){
+        fh = open(file_name, fi->flags);
+        if(fh==-1)
+            return -errno;
+        else fi->fh = fh;           //set file handle to returned handle
+    }else
+        return -errno;
 }
 
 /**
