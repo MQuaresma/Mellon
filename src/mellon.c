@@ -4,7 +4,7 @@
  */
 #define FUSE_USE_VERSION 31
 
-#include<fuse/fuse.h>
+#include<fuse.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<errno.h>
@@ -58,6 +58,15 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
     if((fi && fstat(fi->fh, st)!=-1) || lstat(path, st)!=-1) 
         return 0;
     else return -errno;
+}
+
+/**
+ * Change owner of file
+ */
+static int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi){
+	if(lchown(path, uid, gid)==-1)
+		return -errno;
+	return 0;
 }
 
 /**
@@ -125,16 +134,19 @@ static int mellon_read(const char *file_name, char *buf, size_t size, off_t offs
 
 static struct fuse_operations mellon_ops = {
     .init = mellon_init,                                      //called when mounting the filesystem
-    .getattr = mellon_getattr,                  
     .access = mellon_access,
+    .getattr = mellon_getattr,                  
+    .chown = mellon_chown,
     .readdir = mellon_readdir,                      //called when listing a directory
+    .mkdir = mellon_mkdir,
+    .rmdir = mellon_rmdir,
     .open = mellon_open,                            //called when opening a file
     .read = mellon_read
     /*.write = mellon_write,
     .create = mellon_create,
     .rename = mellon_rename,
     .chmod = mellon_cmod,
-    .chown = mellon_chown,*/
+    */
 
 };
 
