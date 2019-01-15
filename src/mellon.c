@@ -33,16 +33,10 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
 
     printf("Enter access code: \n");
     scanf(" %d", &fa_code);
+    getchar();
 
-    if(fa_code == 1){
-        fprintf(stderr, "%s", file_name);
-
-        fh = open(file_name, fi->flags);
-        if(fh!=-1){
-            fi->fh = fh;           //set file handle to returned handle
-            return 0;
-        }
-    }
+    if(fa_code == 1)
+        return 0;
     return -errno;
 }
 
@@ -82,7 +76,7 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
 /**
  * List files in directory
  */
-static int readdir_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
+static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
     printf("Mellon: listing files\n");
     if(!strcmp(path, "/")){
         filler(buffer, ".", NULL, 0, 0);                    //FIX: offset
@@ -95,10 +89,11 @@ static int readdir_mellon(const char *path, void *buffer, fuse_fill_dir_t filler
 
 
 static struct fuse_operations mellon_ops = {
-    .init = 0,                                  //called when mounting the filesystem
+    .init = 0,                                      //called when mounting the filesystem
     .getattr = mellon_getattr,                  
-    .readdir = readdir_mellon,                     //called when listing a directory
-    .open = mellon_open                         //called when opening a file
+    .readdir = mellon_readdir,                      //called when listing a directory
+    .open = mellon_open,                            //called when opening a file
+    .read = mellon_read
 };
 
 int main(int argc, char *argv[]){
