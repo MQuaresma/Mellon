@@ -16,10 +16,11 @@ static int mellon_chmod(const char *, mode_t, struct fuse_file_info *);
 static int mellon_mkdir(const char *, mode_t);
 static int mellon_rmdir(const char *);
 static int mellon_readdir(const char *, void *, fuse_fill_dir_t, off_t, struct fuse_file_info *, enum fuse_readdir_flags);
+static int mellon_rename(const char*, const char*, unsigned int);
 static int mellon_create(const char *, mode_t , struct fuse_file_info *);
 static int mellon_open(const char *, struct fuse_file_info *);
 static int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
-static int mellon_write(const char *, char *, size_t, off_t, struct fuse_file_info *);
+static int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
 int gen2FACode();
 
@@ -30,10 +31,10 @@ static struct fuse_operations mellon_ops = {
     .getattr = mellon_getattr,                  
     .chown = mellon_chown,
     .chmod = mellon_chmod,
-    .readdir = mellon_readdir,
     .mkdir = mellon_mkdir,
     .rmdir = mellon_rmdir,
-    //.rename = mellon_rename,
+    .readdir = mellon_readdir,
+    .rename = mellon_rename,
     .create = mellon_create,
     .open = mellon_open,
     .read = mellon_read

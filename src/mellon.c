@@ -79,6 +79,17 @@ static int mellon_rmdir(const char *dir){
 }
 
 /**
+ * Change file/directory name from old to new
+ */
+static int mellon_rename(const char *old, const char *new, unsigned int flgs){
+    if(flgs)
+        return -EINVAL;
+    else if(!rename(old, new))
+        return -errno;
+    else return 0;
+}
+
+/**
  * List files in directory
  * FIX: list actual files
  */
@@ -152,8 +163,8 @@ static int mellon_read(const char *file_name, char *buf, size_t size, off_t offs
 /**
  * Callback for writing files e.g: echo teste > <file_name>
  */
-static int mello_write(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-    int bytes_w = pread(fi->fh, buf, size, offset);
+static int mellon_write(const char *file_name, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+    int bytes_w = pwrite(fi->fh, buf, size, offset);
 
     return (bytes_w == -1 ? -errno : bytes_w);
 }
