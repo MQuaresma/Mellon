@@ -145,16 +145,9 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
  * FIX: remove stubs/dummy files
  */
 static int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-    char dummy_content[] = "hello, this is just some test content";
-    int len = strlen(dummy_content);
-    int c_read = (len-offset < size ? len-offset : size); //read max amount of chars possible
+    int bytes_r = pread(fi->fh, buf, size, offset);
 
-    if(!strcmp(file_name, "/dummy_file") || !strcmp(file_name, "/dummy_file_1")){
-        memcpy(buf, dummy_content+offset, c_read);
-        return c_read; 
-    }else
-        return -1;
-    
+    return (bytes_r == -1 ? -errno : bytes_r);
 }
 
 
