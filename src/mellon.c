@@ -95,7 +95,7 @@ static int mellon_rename(const char *old, const char *new, unsigned int flgs){
  * Usefull for setting the file hanlder (fi->fh) to be used in mellon_readdir
  */
 static int mellon_opendir(const char *path, struct fuse_file_info *fi){
-    struct current_dir *cdir = (struct current_dir *)malloc(sizeof(current_dir));
+    struct current_dir *cdir = (struct current_dir *)malloc(sizeof(struct current_dir));
     if(cdir){
         cdir->dirp=opendir(path);
 
@@ -133,7 +133,7 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
 
             cdir->offset = telldir(cdir->dirp);
              
-            if(filler(buf, d->d_entry->d_name, st, cdir->offset, flags))
+            if(filler(buffer, d->d_entry->d_name, st, cdir->offset, flags))
                 break;
 
             cdir->d_entry = NULL;
