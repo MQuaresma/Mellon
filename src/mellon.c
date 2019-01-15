@@ -123,14 +123,20 @@ int gen2FACode(){
  * Called when opening a file for reading/writing/appending
  */
 static int mellon_open(const char *file_name, struct fuse_file_info *fi){
+    int fh;
     char fa_code[5];
 
     puts("Enter access code: ");
     fgets(fa_code, sizeof(fa_code), stdin);
-    getchar();
 
-    if(!strcmp(fa_code, "1\n"))
-        return 0;
+    if(!strcmp(fa_code, "1\n")){
+        fh = open(file_name, fi->flags);
+        if(fh!=-1){
+            fi->fh = fh;        //update current file handler
+            return 0;
+        }
+    }
+
     return -errno;
 }
 
