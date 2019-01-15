@@ -35,12 +35,15 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
     scanf(" %d", &fa_code);
 
     if(fa_code == 1){
+        fprintf(stderr, "%s", file_name);
+
         fh = open(file_name, fi->flags);
-        if(fh==-1)
-            return -errno;
-        else fi->fh = fh;           //set file handle to returned handle
-    }else
-        return -errno;
+        if(fh!=-1){
+            fi->fh = fh;           //set file handle to returned handle
+            return 0;
+        }
+    }
+    return -errno;
 }
 
 static int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
@@ -51,9 +54,9 @@ static int mellon_read(const char *file_name, char *buf, size_t size, off_t offs
     if(!strcmp(file_name, "/dummy_file") || !strcmp(file_name, "/dummy_file_1")){
         memcpy(buf, dummy_content+offset, c_read);
         return c_read; 
-    }else{
+    }else
         return -1;
-    }
+    
 }
 
 /**
