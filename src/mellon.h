@@ -17,6 +17,7 @@ static int mellon_chmod(const char *, mode_t, struct fuse_file_info *);
 static int mellon_mkdir(const char *, mode_t);
 static int mellon_rmdir(const char *);
 static int mellon_readdir(const char *, void *, fuse_fill_dir_t, off_t, struct fuse_file_info *, enum fuse_readdir_flags);
+static int mellon_readlink(const char *, char *, size_t);
 static int mellon_opendir(const char *, struct fuse_file_info *);
 static int mellon_rename(const char*, const char*, unsigned int);
 static int mellon_create(const char *, mode_t , struct fuse_file_info *);
@@ -38,6 +39,7 @@ static struct fuse_operations mellon_ops = {
     .rmdir = mellon_rmdir,
     .opendir = mellon_opendir, 
     .readdir = mellon_readdir,
+    .readlink = mellon_readlink,
     .rename = mellon_rename,
     .create = mellon_create,
     .open = mellon_open,

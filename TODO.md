@@ -1,6 +1,6 @@
 # TODO
 ## Basic Commands
-- [ ] `ls`
+- [x] `ls`
 - [x] `mkdir`
 - [x] `open` syscall
 - [x] `read` syscall

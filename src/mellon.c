@@ -133,7 +133,7 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
 
             cdir->offset = telldir(cdir->dirp);
              
-            if(filler(buffer, d->d_entry->d_name, st, cdir->offset, flags))
+            if(filler(buffer, cdir->d_entry->d_name, NULL, cdir->offset, 0))
                 break;
 
             cdir->d_entry = NULL;
@@ -142,6 +142,18 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
 
     free(st);
     return 0;
+}
+
+/**
+ * Read symbolic/hard links
+ */
+static int mellon_readlink(const char *path, char *buffer, size_t size){
+    int res = readlink(path, buffer, size-1);
+
+    if(res!=-1){
+        buffer[res] = 0;
+        return 0;
+    }else return -errno;
 }
 
 
