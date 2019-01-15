@@ -40,3 +40,14 @@ static struct fuse_operations mellon_ops = {
     .read = mellon_read
     .write = mellon_write
 };
+
+struct trusted_user{
+    char u_name[100];
+    char email[100];
+};
+
+struct current_dir{
+    DIR* dirp;
+    struct dirent *d_entry;
+    int offset;
+};

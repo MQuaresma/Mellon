@@ -89,15 +89,55 @@ static int mellon_rename(const char *old, const char *new, unsigned int flgs){
     else return 0;
 }
 
+
+/*
+ * Changes directory 
+ * Usefull for setting the file hanlder (fi->fh) to be used in mellon_readdir
+ */
+static int mellon_opendir(const char *path, struct fuse_file_info *fi){
+    struct current_dir *cdir = (struct current_dir *)malloc(sizeof(current_dir));
+    if(cdir){
+        cdir->dirp=opendir(path);
+        if(cdir->dirp){
+            cdir->d_entry = 0;
+            cdir->offset = 0;
+            fi->fh = (unsigned long) cdir;  //cast for later use
+        }else{
+            free(cdir);
+            return -errno; 
+        }
+    }else return -ENOMEM;
+}
+
 /**
  * List files in directory
- * FIX: list actual files
  */
 static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
-    if(!strcmp(path, "/")){
-        filler(buffer, ".", NULL, 0, 0);
-        filler(buffer, "..", NULL, 0, 0);
+    struct current_dir *cdir = (struct current_dir *) fi->fh;
+    struct stat *st = (struct stat*)calloc(1, sizeof(struct stat));
+
+    if(offset != cdir->offset){
+        seekdir(cdir->dirp, offset);
+        cdir->offset = offset;
     }
+
+    do{
+        cdir->d_entry = readdir(cdir->dirp);
+
+        if(cdir->d_entry){
+            st->st_ino = cdir->d_entry->d_ino;
+		    st->st_mode = cdir->d_entry->d_type << 12;
+
+            cdir->offset = telldir(cdir->dirp);
+             
+            if(filler(buf, d->d_entry->d_name, st, cdir->offset, flags))
+                break;
+
+            cdir->d_entry = NULL;
+        }else break;
+    }while(c->d_entry);
+
+    free(st);
     return 0;
 }
 
