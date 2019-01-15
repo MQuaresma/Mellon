@@ -14,6 +14,7 @@
 ## FIX
 - [x] List links: `.` and `..`
 - [x] Remove permission/access restrictions
+- [ ] Duplicate entries when listing files (possibly readlink related)
 
 ## Additional features
 - [ ] Use cryptographically secure RNG
