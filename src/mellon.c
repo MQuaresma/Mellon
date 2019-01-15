@@ -17,6 +17,12 @@ static void *mellon_init(struct fuse_conn_info *conn, struct fuse_config *cfg){
     return NULL;
 }
 
+static int mellon_statfs(const char *path, struct statvfs *stfs){
+    if(statvfs(path, stfs)==-1)
+        return -errno;
+    else return 0;
+}
+
 /**
  * Check for access permissions (set with umask(0) call in main)
  */
