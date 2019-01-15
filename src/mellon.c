@@ -142,12 +142,20 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
 
 /*
  * Called for reading a file e.g: cat <file_name>
- * FIX: remove stubs/dummy files
  */
 static int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
     int bytes_r = pread(fi->fh, buf, size, offset);
 
     return (bytes_r == -1 ? -errno : bytes_r);
+}
+
+/**
+ * Callback for writing files e.g: echo teste > <file_name>
+ */
+static int mello_write(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+    int bytes_w = pread(fi->fh, buf, size, offset);
+
+    return (bytes_w == -1 ? -errno : bytes_w);
 }
 
 
