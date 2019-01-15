@@ -1,16 +1,19 @@
 # TODO
-## Basics
-- [x] ls feature on filesystem
-- [ ] mkdir feature on filesystem
-- [x] open command on filesystem
-- [ ] alert via email/phone number
-- [ ] web interface to insert auth code
-- [ ] cat/read command
-- [ ] write command
+## Basic Commands
+- [ ] `ls`
+- [x] `mkdir`
+- [x] `open` syscall
+- [x] `read` syscall
+- [x] `write` syscall
+
+## Features
+- [ ] ACL mapping user:email
+- [ ] Send auth code via email
+- [ ] Web interface to insert auth code
 
 ## FIX
 - [x] List links: `.` and `..`
-- [ ] Remove permission/access restrictions
+- [x] Remove permission/access restrictions
 
 ## Additional features
 - [ ] Use cryptographically secure RNG
