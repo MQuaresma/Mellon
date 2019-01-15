@@ -54,7 +54,7 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
 static int read_mellon(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
     printf("Mellon: listing files\n");
     if(!strcmp(path, "/")){
-        filler(buffer, ".", NULL, 0, 0);            //FIX: offset
+        filler(buffer, ".", NULL, 0, 0);                    //FIX: offset
         filler(buffer, "dummy_file_2", NULL, 0, 0);
         filler(buffer, "dummy_file", NULL, 0, 0);
     }
