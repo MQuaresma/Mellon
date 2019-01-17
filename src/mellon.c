@@ -179,17 +179,15 @@ int send2FACode(char *buf){
     CURL *curl;   
     CURLcode res = CURLE_OK;
     struct curl_slist *recipients = NULL;
-    struct upload_status upload_ctx;
     char *email_body = (char*)malloc(sizeof(char)*200);
 
-
-    upload_ctx.lines_read = 0;
     curl = curl_easy_init();
     getentropy(buf, sizeof(char)*4);
 
-    for(int i = 0; i < 5; i ++)
+    for(int i = 0; i < 4; i ++)
         *(buf+i) = (*(buf+i) % 10) + 48;      //convert random bytes in ascii numbers
 
+    
     sprintf(email_body, PAYLOAD_TEMPLATE, current_user.email, buf);
     
     if(curl){
@@ -207,6 +205,7 @@ int send2FACode(char *buf){
     }
 
     free(email_body);
+    return 0;
 }
 
 /*
@@ -216,6 +215,7 @@ int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fh;
     char fa_code[5], user_code[5];
     send2FACode(fa_code);
+    fprintf(stderr, "%s\n", fa_code);
 
     puts("Enter access code: ");
     fgets(user_code, sizeof(user_code), stdin);
