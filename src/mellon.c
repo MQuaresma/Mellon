@@ -9,7 +9,7 @@
  * Initial configurations for file system:
  *      - disable caching of various inode related info
  */
-static void *mellon_init(struct fuse_conn_info *conn, struct fuse_config *cfg){
+void *mellon_init(struct fuse_conn_info *conn, struct fuse_config *cfg){
     cfg->use_ino = 1;
     cfg->entry_timeout = 0;
 	cfg->attr_timeout = 0;
@@ -17,7 +17,7 @@ static void *mellon_init(struct fuse_conn_info *conn, struct fuse_config *cfg){
     return NULL;
 }
 
-static int mellon_statfs(const char *path, struct statvfs *stfs){
+int mellon_statfs(const char *path, struct statvfs *stfs){
     if(statvfs(path, stfs)==-1)
         return -errno;
     else return 0;
@@ -26,7 +26,7 @@ static int mellon_statfs(const char *path, struct statvfs *stfs){
 /**
  * Check for access permissions (set with umask(0) call in main)
  */
-static int mellon_access(const char *path, int mask){
+int mellon_access(const char *path, int mask){
     if(access(path, mask)==-1) 
         return -errno;
     else return 0;
@@ -35,7 +35,7 @@ static int mellon_access(const char *path, int mask){
 /**
  * Get file attributes for access control
  */
-static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_info *fi){
+int mellon_getattr(const char *path, struct stat *st, struct fuse_file_info *fi){
     //Check if file/dir is open
     if((fi && fstat(fi->fh, st)!=-1) || lstat(path, st)!=-1) 
         return 0;
@@ -45,7 +45,7 @@ static int mellon_getattr(const char *path, struct stat *st, struct fuse_file_in
 /**
  * Change owner of dir/file
  */
-static int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi){
+int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi){
     if((fi && fchown(fi->fh, uid, gid)!=-1) || lchown(path, uid, gid)==-1) 
         return 0;
     else return -errno;
@@ -54,7 +54,7 @@ static int mellon_chown(const char *path, uid_t uid, gid_t gid, struct fuse_file
 /**
  * Change permissions of dir/file
  */
-static int mellon_chmod(const char *path, mode_t mode, struct fuse_file_info *fi){
+int mellon_chmod(const char *path, mode_t mode, struct fuse_file_info *fi){
     if((fi && fchmod(fi->fh, mode)!=-1) || chmod(path, mode)==-1) 
         return 0;
     else return -errno;
@@ -63,7 +63,7 @@ static int mellon_chmod(const char *path, mode_t mode, struct fuse_file_info *fi
 /**
  * Make subdirectory
  */
-static int mellon_mkdir(const char *dir, mode_t mode){
+int mellon_mkdir(const char *dir, mode_t mode){
     if(mkdir(dir, mode)==-1) 
         return -errno;
     else return 0;
@@ -72,7 +72,7 @@ static int mellon_mkdir(const char *dir, mode_t mode){
 /**
  * Remove directory
  */
-static int mellon_rmdir(const char *dir){
+int mellon_rmdir(const char *dir){
     if(rmdir(dir)==-1) 
         return -errno;
     else return 0;
@@ -81,7 +81,7 @@ static int mellon_rmdir(const char *dir){
 /**
  * Change file/directory name from old to new
  */
-static int mellon_rename(const char *old, const char *new, unsigned int flgs){
+int mellon_rename(const char *old, const char *new, unsigned int flgs){
     if(flgs)
         return -EINVAL;
     else if(!rename(old, new))
@@ -94,7 +94,7 @@ static int mellon_rename(const char *old, const char *new, unsigned int flgs){
  * Changes directory 
  * Usefull for setting the file hanlder (fi->fh) to be used in mellon_readdir
  */
-static int mellon_opendir(const char *path, struct fuse_file_info *fi){
+int mellon_opendir(const char *path, struct fuse_file_info *fi){
     struct current_dir *cdir = (struct current_dir *)malloc(sizeof(struct current_dir));
     if(cdir){
         cdir->dirp=opendir(path);
@@ -114,7 +114,7 @@ static int mellon_opendir(const char *path, struct fuse_file_info *fi){
 /**
  * List files in directory
  */
-static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
+int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags){
     struct current_dir *cdir = (struct current_dir *) (uintptr_t)fi->fh;
     struct stat *st = (struct stat*)calloc(1, sizeof(struct stat));
 
@@ -147,7 +147,7 @@ static int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler
 /**
  * Read symbolic/hard links
  */
-static int mellon_readlink(const char *path, char *buffer, size_t size){
+int mellon_readlink(const char *path, char *buffer, size_t size){
     int res = readlink(path, buffer, size-1);
 
     if(res!=-1){
@@ -160,7 +160,7 @@ static int mellon_readlink(const char *path, char *buffer, size_t size){
 /**
  * Create/touch files
  */
-static int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi){
+int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi){
     int fd = open(file_name, fi->flags, mode);
 
     if(fd==-1)
@@ -188,7 +188,7 @@ int gen2FACode(){
 /*
  * Called when opening a file for reading/writing/appending
  */
-static int mellon_open(const char *file_name, struct fuse_file_info *fi){
+int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fh;
     char fa_code[5];
 
@@ -209,7 +209,7 @@ static int mellon_open(const char *file_name, struct fuse_file_info *fi){
 /*
  * Called for reading a file e.g: cat <file_name>
  */
-static int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+int mellon_read(const char *file_name, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
     int bytes_r = pread(fi->fh, buf, size, offset);
 
     return (bytes_r == -1 ? -errno : bytes_r);
@@ -218,7 +218,7 @@ static int mellon_read(const char *file_name, char *buf, size_t size, off_t offs
 /**
  * Callback for writing files e.g: echo teste > <file_name>
  */
-static int mellon_write(const char *file_name, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+int mellon_write(const char *file_name, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
     int bytes_w = pwrite(fi->fh, buf, size, offset);
 
     return (bytes_w == -1 ? -errno : bytes_w);
@@ -226,6 +226,17 @@ static int mellon_write(const char *file_name, const char *buf, size_t size, off
 
 
 int main(int argc, char *argv[]){
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    
+    current_user = acl[0];
+
+    if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
+        return 1;
+    else
+        puts(current_user.u_name);
+        puts(current_user.email);
+
     umask(0); //remove all restrictions
-    fuse_main(argc, argv, &mellon_ops, NULL);
+    fuse_main(args.argc, args.argv, &mellon_ops, NULL);
+    fuse_opt_free_args(&args);
 }
