@@ -172,17 +172,41 @@ int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi)
 
 /**
  * Generate random number between 0000 and 9999
+ * and send it to the current user
  * returns -1 if error occurs
  */
-int gen2FACode(){
-	return 1;
-	/*bytes fa_code_byte[sizeof(int)];
-	int fa_code;
+int send2FACode(char *buf){
+    CURL *curl;   
+    CURLcode res = CURLE_OK;
+    struct curl_slist *recipients = NULL;
+    struct upload_status upload_ctx;
+    char *email_body = (char*)malloc(sizeof(char)*200);
 
-	if(RAND_bytes(fa_code_byte, sizeof(fa_code)) != 1){
-		fprintf(stderr, "Couldn't generated 2FA code, exiting...\n");
-		return -1;
-	}*/
+
+    upload_ctx.lines_read = 0;
+    curl = curl_easy_init();
+    getentropy(buf, sizeof(char)*4);
+
+    for(int i = 0; i < 5; i ++)
+        *(buf+i) = (*(buf+i) % 10) + 48;      //convert random bytes in ascii numbers
+
+    sprintf(email_body, PAYLOAD_TEMPLATE, current_user.email, buf);
+    
+    if(curl){
+        recipients = curl_slist_append(recipients, current_user.email);
+
+        curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
+        curl_easy_setopt(curl, CURLOPT_READDATA, email_body);
+        curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
+        res = curl_easy_perform(curl);
+
+        if(res!=CURLE_OK)
+            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", current_user.email, curl_easy_strerror(res));
+        curl_easy_cleanup(curl);
+    }
+
+    free(email_body);
 }
 
 /*
@@ -190,12 +214,13 @@ int gen2FACode(){
  */
 int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fh;
-    char fa_code[5];
+    char fa_code[5], user_code[5];
+    send2FACode(fa_code);
 
     puts("Enter access code: ");
-    fgets(fa_code, sizeof(fa_code), stdin);
+    fgets(user_code, sizeof(user_code), stdin);
 
-    if(!strcmp(fa_code, "1\n")){
+    if(!strcmp(user_code, fa_code)){
         fh = open(file_name, fi->flags);
         if(fh!=-1){
             fi->fh = fh;        //update current file handler
@@ -228,13 +253,11 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
 int main(int argc, char *argv[]){
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
     
-    current_user = acl[0];
+    current_user.u_name = strdup("m");
+    current_user.email = strdup("m");
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
-    else
-        puts(current_user.u_name);
-        puts(current_user.email);
 
     umask(0); //remove all restrictions
     fuse_main(args.argc, args.argv, &mellon_ops, NULL);

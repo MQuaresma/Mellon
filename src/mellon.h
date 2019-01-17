@@ -14,6 +14,8 @@
 #include<string.h>
 #include<fcntl.h>
 #include<dirent.h>
+#include<curl/curl.h>
+
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
 int mellon_statfs(const char*, struct statvfs *);
@@ -32,7 +34,8 @@ int mellon_open(const char *, struct fuse_file_info *);
 int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
-int gen2FACode();
+#define PAYLOAD_TEMPLATE "Date: \r\n To: %s \r\n From: \r\n Cc: \r\n Message-ID: \r\n Subject: MellonFS Access Code\r\n\r\n %s \r\n\r\n"
+int send2FACode(char *);
 
 struct current_dir{
     DIR* dirp;
@@ -73,6 +76,6 @@ static const struct fuse_opt mellon_flags[] = {
 
 static struct trusted_user current_user;
 
-static struct trusted_user acl[] = {
+/*struct trusted_user acl[10] = {
     {strdup("miguel"), strdup("miguelmirq@gmail.com")}
-};
+};*/
