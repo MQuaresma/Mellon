@@ -1,27 +1,41 @@
 #!/usr/bin/env python
 import os
-from subprocess import Popen, PIPE
-from flask import Flask, request, render_template
+from subprocess import Popen
+from flask import Flask, request, render_template, redirect, url_for
 
-app = Flask(__name__)
+APP = Flask(__name__)
 os.mkfifo("mellon_fifo")
 
-mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user=miguel', '--email=miguelmirq@gmail.com'])
-mellon_fifo = open("mellon_fifo", "w")
+mellon_fs = None
+mellon_fifo = None
 
-@app.route('/')
+@APP.route('/', methods=['POST', 'GET'])
+def login():
+    if request.method == 'GET':
+        return render_template('usr_cred.html')
+    else:
+        init_fs_daemon()
+        return redirect(url_for('auth'))
+
+def init_fs_daemon():
+    uname = request.form['username']
+    print(uname)
+    email = request.form['email']
+    print(email)
+    #mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user='+uname, '--email='+email])
+    #mellon_fifo = open("mellon_fifo", "w")
+
+@APP.route('/auth', methods=['GET', 'POST'])
 def auth():
-    return render_template('authin.html')
-
-@app.route('/', methods=['POST'])
-def getCode():
-    code = request.form['fa_code']
-    mellon_fifo.write(code)
-    mellon_fifo.flush()
+    if request.method == 'POST':
+        code = request.form['fa_code']
+        print(code)
+        mellon_fifo.write(code)
+        mellon_fifo.flush()
     return render_template('authin.html')
 
 def main():
-    app.run()
+    APP.run()
 
 if __name__=="__main__":
     main()
