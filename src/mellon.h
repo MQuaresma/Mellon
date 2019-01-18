@@ -16,6 +16,7 @@
 #include<fcntl.h>
 #include<dirent.h>
 #include<curl/curl.h>
+#include <sys/time.h>
 
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
