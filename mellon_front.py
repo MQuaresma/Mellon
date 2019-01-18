@@ -9,8 +9,6 @@ os.mkfifo("mellon_fifo")
 mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user=miguel', '--email=miguelmirq@gmail.com'])
 mellon_fifo = open("mellon_fifo", "w")
 
-app.run()
-
 @app.route('/')
 def auth():
     return render_template('authin.html')
@@ -21,3 +19,9 @@ def getCode():
     mellon_fifo.write(code)
     mellon_fifo.flush()
     return render_template('authin.html')
+
+def main():
+    app.run()
+
+if __name__=="__main__":
+    main()
