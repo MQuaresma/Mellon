@@ -209,11 +209,6 @@ int send2FACode(char *buf){
     return 0;
 }
 
-char *getGETParam(char *query_string){
-    strtok(strtok(query_string, "&"), "=");
-    return strtok(NULL, "=");
-}
-
 /*
  * Called when opening a file for reading/writing/appending
  */
@@ -222,11 +217,8 @@ int mellon_open(const char *file_name, struct fuse_file_info *fi){
     char fa_code[5], *user_code;
     struct timeval start, end;
 
-
     if(!send2FACode(fa_code)){
         gettimeofday(&start, NULL);
-        sleep(10);
-        user_code = getGETParam(getenv("QUERY_STRING"));
         fgets(user_code, sizeof(user_code), stdin);
         gettimeofday(&end, NULL);
 
