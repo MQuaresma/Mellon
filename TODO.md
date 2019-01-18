@@ -7,14 +7,19 @@
 - [x] `write` syscall
 
 ## Features
-- [ ] ACL mapping user:email
-- [ ] Send auth code via email
+- [x] ACL mapping user:email
+- [x] Send auth code via email
 - [ ] Web interface to insert auth code
+- [ ] Store ACL mapping with integrity protection
+- [ ] User registration via master password
 
 ## FIX
 - [x] List links: `.` and `..`
 - [x] Remove permission/access restrictions
-- [ ] Duplicate entries when listing files (possibly readlink related)
+- [x] Duplicate entries when listing files (possibly readlink related)
 
 ## Additional features
-- [ ] Use cryptographically secure RNG
+- [x] Use cryptographically secure RNG
+
+## QoF
+- [ ] Organize code in different files
