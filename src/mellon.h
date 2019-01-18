@@ -1,12 +1,22 @@
 #define FUSE_USE_VERSION 31
+#ifdef __APPLE__
+#include<fuse/fuse_darwin.h>
+#include<sys/stat.h>
+#include<fuse/fuse.h>
+#include<fuse/fuse_common_compat.h>
+#include<sys/random.h>
+#endif
 #include<fuse.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<stddef.h>
 #include<errno.h>
+#include<unistd.h>
 #include<string.h>
 #include<fcntl.h>
 #include<dirent.h>
+#include<curl/curl.h>
+#include <sys/time.h>
 
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
@@ -26,6 +36,8 @@ int mellon_open(const char *, struct fuse_file_info *);
 int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
+#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
+#define FROM "example@gmail.com"
 int send2FACode(char *);
 
 struct current_dir{
