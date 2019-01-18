@@ -181,13 +181,13 @@ int send2FACode(char *buf){
     char *email_body = (char*)malloc(sizeof(char)*200);
 
     curl = curl_easy_init();
+
     getentropy(buf, sizeof(char)*4);
-
-    sprintf(email_body, POST_BODY, "miguelmirq@gmail.com", "1111");
-
     for(int i = 0; i < 4; i ++)
         *(buf+i) = (*(buf+i) % 10) + 48;      //convert random bytes in ascii numbers
     
+    sprintf(email_body, POST_BODY, current_user.email, FROM, buf);
+
     if(curl){
         curl_easy_setopt(curl, CURLOPT_URL, "https://api.sendgrid.com/v3/mail/send");
         header_params = curl_slist_append(header_params, "Authorization: Bearer");
@@ -198,7 +198,7 @@ int send2FACode(char *buf){
         
         res = curl_easy_perform(curl);
         if(res!=CURLE_OK)
-            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", "miguelmirq@gmail.com", curl_easy_strerror(res));
+            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", current_user.email, curl_easy_strerror(res));
         curl_easy_cleanup(curl);
     }
 
