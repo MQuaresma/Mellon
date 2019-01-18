@@ -37,7 +37,7 @@ int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
 #define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
-#define FROM "example@gmail.com"
+#define FROM "miguelmirq@gmail.com"
 int send2FACode(char *);
 
 struct current_dir{

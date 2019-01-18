@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 from subprocess import Popen, PIPE
 from flask import Flask, request, render_template
 app = Flask(__name__)
 
-mellon_fs = Popen(['./bin/mellon ../MountPoint --user=miguel --email=email@gmail.com'], stdin=PIPE)
+mellon_fs = Popen(['./bin/mellon ../MountPoint --user=miguel --email=miguelmirq@gmail.com'], shell=True, stdin=PIPE)
 
 @app.route('/')
 def auth():
