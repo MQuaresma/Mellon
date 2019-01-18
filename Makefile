@@ -3,7 +3,7 @@ CFLAGS=-Wall -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse3 -L/usr/local/lib/
 LINKERFLAGS=-lcurl -lfuse3 -lpthread
 SRC_DIR=src
 BIN_DIR=bin
-DEPS=mellon.c
+DEPS=mellon.c auth_module.c
 BIN=mellon
 
 .DEFAULT_GOAL = all
@@ -17,4 +17,3 @@ all: check_dirs $(SRC_DIR)/$(DEPS)
 
 clean:
 	rm -rf $(BIN_DIR)
-
