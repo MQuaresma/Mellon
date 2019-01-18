@@ -79,6 +79,7 @@ static const struct fuse_opt mellon_flags[] = {
 
 static struct trusted_user current_user;
 
+int mellon_fifo_fd;
 /*struct trusted_user acl[10] = {
     {strdup("miguel"), strdup("miguelmirq@gmail.com")}
 };*/

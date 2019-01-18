@@ -220,7 +220,7 @@ int mellon_open(const char *file_name, struct fuse_file_info *fi){
 
     if(!send2FACode(fa_code)){
         gettimeofday(&start, NULL);
-        read(0, user_code, 4);
+        read(mellon_fifo_fd, user_code, 4);
         gettimeofday(&end, NULL);
 
         //Timeout if user takes more than 45 secs do input code
@@ -257,6 +257,7 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
 
 int main(int argc, char *argv[]){
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
     
     current_user.u_name = strdup("m");
     current_user.email = strdup("m");
