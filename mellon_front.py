@@ -12,7 +12,8 @@ def auth():
 @app.route('/', methods=['POST'])
 def getCode():
     code = request.form['fa_code']
-    mellon_fs.communicate(input=code)
+    mellon_fs.communicate(input=code.encode("ascii"))
+    mellon_fs.stdin.flush()
     return render_template('authin.html')
 
 def main():

@@ -216,10 +216,11 @@ int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fh;
     char fa_code[5], user_code[5];
     struct timeval start, end;
+    user_code[4]=0;
 
     if(!send2FACode(fa_code)){
         gettimeofday(&start, NULL);
-        fgets(user_code, sizeof(user_code), stdin);
+        read(0, user_code, 4);
         gettimeofday(&end, NULL);
 
         //Timeout if user takes more than 45 secs do input code
