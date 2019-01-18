@@ -4,6 +4,7 @@
 #include<sys/stat.h>
 #include<fuse/fuse.h>
 #include<fuse/fuse_common_compat.h>
+#include<sys/random.h>
 #endif
 #include<fuse.h>
 #include<stdio.h>
@@ -34,7 +35,7 @@ int mellon_open(const char *, struct fuse_file_info *);
 int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
-#define PAYLOAD_TEMPLATE "Date: \r\n To: %s \r\n From: \r\n Cc: \r\n Message-ID: \r\n Subject: MellonFS Access Code\r\n\r\n %s \r\n\r\n"
+#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"miguelquaresma97@gmail.com\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
 int send2FACode(char *);
 
 struct current_dir{

@@ -3,7 +3,6 @@
  *
  */
 
-
 #include "mellon.h"
 /**
  * Initial configurations for file system:
@@ -178,29 +177,28 @@ int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi)
 int send2FACode(char *buf){
     CURL *curl;   
     CURLcode res = CURLE_OK;
-    struct curl_slist *recipients = NULL;
+    struct curl_slist *header_params = NULL;
     char *email_body = (char*)malloc(sizeof(char)*200);
 
     curl = curl_easy_init();
     getentropy(buf, sizeof(char)*4);
 
+    sprintf(email_body, POST_BODY, "miguelmirq@gmail.com", "1111");
+
     for(int i = 0; i < 4; i ++)
         *(buf+i) = (*(buf+i) % 10) + 48;      //convert random bytes in ascii numbers
-
-    
-    sprintf(email_body, PAYLOAD_TEMPLATE, current_user.email, buf);
     
     if(curl){
-        recipients = curl_slist_append(recipients, current_user.email);
+        curl_easy_setopt(curl, CURLOPT_URL, "https://api.sendgrid.com/v3/mail/send");
+        header_params = curl_slist_append(header_params, "Authorization: Bearer");
+        header_params = curl_slist_append(header_params, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_params);
 
-        curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
-        curl_easy_setopt(curl, CURLOPT_READDATA, email_body);
-        curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, email_body);
+        
         res = curl_easy_perform(curl);
-
         if(res!=CURLE_OK)
-            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", current_user.email, curl_easy_strerror(res));
+            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", "miguelmirq@gmail.com", curl_easy_strerror(res));
         curl_easy_cleanup(curl);
     }
 
@@ -214,20 +212,21 @@ int send2FACode(char *buf){
 int mellon_open(const char *file_name, struct fuse_file_info *fi){
     int fh;
     char fa_code[5], user_code[5];
-    send2FACode(fa_code);
-    fprintf(stderr, "%s\n", fa_code);
 
-    puts("Enter access code: ");
-    fgets(user_code, sizeof(user_code), stdin);
 
-    if(!strcmp(user_code, fa_code)){
-        fh = open(file_name, fi->flags);
-        if(fh!=-1){
-            fi->fh = fh;        //update current file handler
-            return 0;
+    if(!send2FACode(fa_code)){
+        puts("Enter access code: ");
+        fgets(user_code, sizeof(user_code), stdin);
+
+        if(!strcmp(user_code, fa_code)){
+            fh = open(file_name, fi->flags);
+            if(fh!=-1){
+                fi->fh = fh;        //update current file handler
+                return 0;
+            }
         }
     }
-
+    
     return -errno;
 }
 
