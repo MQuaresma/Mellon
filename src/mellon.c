@@ -261,7 +261,7 @@ int encrypt_decrypt(char *source, int enc_dec){
         sprintf(payload, DEC, source, source, AES_KEY, AES_IV);
     }else{      //encrypt
         payload = (char*)malloc(sizeof(char)*(strlen(ENC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
-        sprintf(payload, ENC, source, source, AES_KEY, AES_IV);
+        sprintf(payload, ENC, source, source, AES_KEY, AES_IV, source);
     }
 
     system(payload);

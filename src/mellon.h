@@ -23,7 +23,7 @@
 #define AES_KEY "123456789"
 #define AES_IV "0987654321"
 #define DEC "openssl enc -aes-256-cbc -in %s.enc -out %s.txt -K %s -iv %s -d"
-#define ENC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s"
+#define ENC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s && rm %s.txt"
 
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
