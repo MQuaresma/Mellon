@@ -197,6 +197,7 @@ int send2FACode(char *buf){
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, email_body);
         
         res = curl_easy_perform(curl);
+        free(email_body);
         if(res!=CURLE_OK){
             fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", current_user.email, curl_easy_strerror(res));
             return -1;
@@ -205,7 +206,6 @@ int send2FACode(char *buf){
     }
 
     curl_global_cleanup();
-    free(email_body);
     return 0;
 }
 
@@ -254,40 +254,52 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
     return (bytes_w == -1 ? -errno : bytes_w);
 }
 
-FILE *decrypt(char *source){
-    FILE *src = fopen(source, "rw");
-    //decrypt
-    return src;
+int encrypt_decrypt(char *source, int enc_dec){
+    char *payload; 
+    if(enc_dec)
+        payload = (char*)malloc(sizeof(char)*(strlen(DEC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
+    else
+        payload = (char*)malloc(sizeof(char)*(strlen(ENC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
+
+    sprintf(payload, ENC, source, source, AES_KEY, AES_IV);
+    system(payload);
+    free(payload);
+    return 1;
 }
 
-int getUserEmail(FILE *acl_file){
+int getUserEmail(char *source){
+    FILE *acl_file = fopen(source, "r");
     char *acl_entry=NULL;
     int rd;
     size_t in_len=0;
 
-    while((rd=getline(&acl_entry, &in_len, acl_file)) != -1){
-        if(strstr(acl_entry, current_user.u_name)==acl_entry)
-            break;
-        //free(acl_entry);
-    }
+    if(acl_file){
+        while((rd=getline(&acl_entry, &in_len, acl_file))!=-1){
+            if(!strcmp(strtok(acl_entry, ":"), current_user.u_name))
+                break;
+            free(acl_entry);
+        }
 
-    if(rd==-1){
-        if(!strcmp(current_user.admin_key, "m"))
-            fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
-        else return -1;
-    }else{
-        acl_entry[rd-1]=0;                              //remove new line character
-        strtok(acl_entry, ":");
-        current_user.email = strdup(strtok(NULL, ":"));
-        free(acl_entry);
+        fclose(acl_file);
+        if(rd==-1){
+            if(!strcmp(current_user.admin_key, AES_KEY) && (acl_file = fopen(source, "a"))){
+                fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
+                fflush(acl_file);
+                fclose(acl_file);
+            } else return -1;
+        }else{
+            acl_entry[rd-1]=0;                              //remove new line character
+            current_user.email = strdup(strtok(NULL, ":"));
+            free(acl_entry);
+        }
         return 0;
     }
+    return -1;
 }
 
 
 int main(int argc, char *argv[]){
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-    FILE *acl_fd = decrypt("mellon_acl");
    
     mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
     current_user.u_name = strdup("m");
@@ -296,16 +308,13 @@ int main(int argc, char *argv[]){
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
-    else if(acl_fd){
-        //search for user
-        if(!getUserEmail(acl_fd)){
-            fclose(acl_fd);
+    else if(encrypt_decrypt("mellon_acl", 1)){
+        if(!getUserEmail("mellon_acl.txt")){
+            encrypt_decrypt("mellon_acl", 0);
             umask(0); //remove all restrictions
             fuse_main(args.argc, args.argv, &mellon_ops, NULL);
             fuse_opt_free_args(&args);
-        }else{
-            fclose(acl_fd);
+        }else
             fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
-        }
     }
 }

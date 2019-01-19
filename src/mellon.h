@@ -18,12 +18,12 @@
 #include <sys/time.h>
 #include<openssl/aes.h>
 
-#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
+#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"MellonFS Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
 #define FROM "miguelmirq@gmail.com"
-#define AES_KEY "1234567890"
+#define AES_KEY "123456789"
 #define AES_IV "0987654321"
-#define ENC "openssl enc -aes-256-cbc -in test.enc -K  -iv "
-#define D_ENC "openssl enc -aes-256-cbc -in test.enc -K  -iv -d"
+#define ENC "openssl enc -aes-256-cbc -in %s.enc -out %s.txt -K %s -iv %s"
+#define DEC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s -d"
 
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
@@ -79,7 +79,7 @@ static const struct fuse_operations mellon_ops = {
 static const struct fuse_opt mellon_flags[] = {
     {"--user=%s", offsetof(struct trusted_user, u_name), 1},
     {"--email=%s", offsetof(struct trusted_user, email), 1},
-    {"--reg_key=%s", offsetof(struct trusted_user, admin_key), 1},
+    {"--key_reg=%s", offsetof(struct trusted_user, admin_key), 1},
     FUSE_OPT_END
 };
 
