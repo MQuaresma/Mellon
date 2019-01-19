@@ -35,32 +35,32 @@
 }
 
 \section{Introdução}
-Os mecanismos de controlo de acesso são uma das partes fundamentais dos sistemas de computação atuais, sendo um tópico mais relevante que nunca com a
-utilização destes sistemas de uma forma interligada em que vários recursos (\textbf{e.g.:} ficheiros, websites, etc) são partilhados por diversos 
-utilizadores ao mesmo tempo. Como tal é necessário desenvolver mecanismos de controlo que permitam mediar o acesso partilhado a estes recursos, 
-garantindo a sua integridade e limitando o acesso aos utilizadores autorizados. Dada a diversidade de contextos em que é necessário o uso destes mecanismos
-e os requisitos individuais de cada um destes contextos, sistemas de permissões como os apresentados pelo sistema operativo Unix não são os mais adequados
-dada a sua primitividade e inflexibilidade, sendo útil desenvolver sistemas de controlo que implementem estruturas mais complexas adaptadas ao contexto
-para o qual são desenvolvidos. 
-O presente trabalho propõe uma possível implementação para um destes mecanismos de controlo, designado MellonFS, que, com recurso a um segredo/código aletório 
-gerado \textit{on demand} e a uma lista de utilizadores autorizados, visa mediar este acesso de forma segura e conveniente.
+Os mecanismos de controlo de acesso são uma das partes fundamentais dos sistemas de computação atuais, desempenhando um papel fundamental ao
+permitirem a utilização destes sistemas de uma forma partilhada por diversos utilizadores em simultâneo. 
+Como tal, é necessário desenvolver mecanismos de controlo que permitam mediar o acesso partilhado a estes recursos, garantindo a sua integridade 
+e restringindo o acesso aos utilizadores autorizados. Dada a diversidade de contextos em que é necessário a implementação destes mecanismos o 
+uso de sistemas de permissões como os apresentados pelo sistema operativo Unix é inadequado dada a sua primitividade e inflexibilidade, sendo 
+útil desenvolver sistemas de controlo que implementem estruturas mais complexas adaptadas ao contexto para o qual são desenvolvidos. 
+O presente trabalho propõe uma possível implementação para um destes mecanismos de controlo, designado MellonFS, que, com recurso a um 
+segredo/código aletório gerado \textit{on demand} e a uma lista de utilizadores autorizados, visa mediar este acesso de forma segura e conveniente.
 
 \section{MellonFS}
-O sistema desenvolvido apresenta uma arquitetura constituída por dois módulos distintos: 
+O sistema proposto foi desenvolvido com uma arquitetura constituída por dois módulos distintos, que comunicam entre si: 
 \begin{itemize}
-    \item uma \textit{web interface}, desenvolvida em Python, responsável por iniciar a execução do \textit{daemon} e que permite a um utilizador 
-    identificar-se perante o sistema numa fase inicial e, posteriormente, introduzir os códigos de autenticação que lhe são enviados de modo a 
-    poder aceder aos ficheiros que pretende.
-    \item um \textit{daemon}, desenvolvido em C, que implementa o sistema de ficheiros com recurso à biblioteca libfuse, e que é ainda responsável 
-    por gerar um código de autenticação e notificar o utilizador cada vez que é invocada a \textit{system call} \texttt{open}
+    \item uma \textit{web interface}, desenvolvida em Python, responsável por iniciar a execução do \textit{daemon} e que permite ao utilizador 
+    identificar-se perante o sistema e, posteriormente, introduzir os códigos de autenticação que lhe são enviados de modo a poder aceder aos 
+    ficheiros pretendidos
+    \item um \textit{daemon}, desenvolvido em C, que implementa o sistema de ficheiros com recurso à biblioteca libfuse sendo ainda responsável 
+    por gerar um código de autenticação cada vez que é invocada a \textit{system call} \texttt{open}
 \end{itemize}
 
 \subsection{Implementação}
 \subsubsection{Web Frontend}
 A \textit{web fronted} foi desenvolvida com recurso à linguagem Python e à framework \textit{Flask}.
-Como foi referido, esta componente é responsável por iniciar \textit{daemon} com os argumentos necessários ao seu funcionamento.
-Antes de invocar o \textit{daemon}, o \textit{frontend} requisita o \textit{username} ao utilizador, que permitirá determinar se este se 
-encontra (ou não) autorizado a aceder aos ficheiros no sistema desenvolvido sendo este argumento passado ao \textit{daemon} como argumento:
+Como foi referido esta componente é responsável por iniciar o \textit{daemon} com os argumentos necessários ao seu funcionamento.
+Antes de invocar o mesmo a \textit{frontend} requisita o \textit{username} ao utilizador que permitirá determinar se este se 
+encontra, ou não, autorizado a aceder aos ficheiros no sistema desenvolvido. Este valor será também ele passado como argumento ao 
+\textit{daemon}:
 \begin{Verbatim}
 args=['./bin/mellon', '../MountPoint']
 ...
@@ -76,8 +76,8 @@ if request.method == 'POST':
     mellon_fifo.write(code[:5])
     mellon_fifo.flush()
 \end{Verbatim}
-O \textit{frontend} permite ainda que um utilizador efetue o seu registo, devendo para isso ter acesso à \textit{master key}(=123456789),
-rejeitando qualquer tentativa de registo caso o valor introduzido seja inválido:
+Na posse da \textit{master key}(=123456789), o \textit{frontend} permite ainda o registo de novos utilizadores,
+rejeitando qualquer tentativa de registo caso o valor introduzido para a mesma seja inválido:
 \begin{figure}[H]
     \centering
     \includegraphics[width=10cm]{Pictures/Main.png}
@@ -90,45 +90,47 @@ de email do utilizador:
 \end{figure}
 
 \subsubsection{Daemon}
-O segundo componente do sistema desenvolvido é invocado pelo \textit{frontend} e implementa não só o sistema de ficheiros mas também os mecanismos
-de controlo de acesso ao sistema. 
-Antes de iniciar a execução em modo \textit{daemon} este componente verifica se o utilizador que requisitou o acesso se encontra na lista de controlo
-de acesso e, em caso afirmativo, prossegue a execução. Adicionalmente, caso o utilizador não esteja autorizado mas tenha sido inserida a \textit{master
+O segundo componente do sistema desenvolvido é invocado pelo \textit{frontend} e implementa não só o sistema de ficheiros, mas também os mecanismos
+de controlo de acesso ao mesmo. 
+Antes de iniciar a execução em modo \textit{daemon} este componente verifica se a identificação apresenta pelo utilizador que requisitou o acesso 
+é valida e, em caso afirmativo, prossegue a execução. Adicionalmente, caso o utilizador não esteja autorizado mas tenha sido inserida a \textit{master
 key} correta, o sistema efetua o registo do utilizador, prosseguindo à invocação do \textit{dameon}.
-O mecanismo de autenticação envolve ainda uma verificação prévia que visa garantir que o utilizador tem permissão para aceder ao sistema de ficheiros, 
-sendo o conjunto de utilizadores nestas condições armazenados no ficheiro \texttt{mellon\_acl.enc} que se encontra cifrado, via AES em modo CBC, por 
-forma a garantir a sua integridade e confidencialidade.
-Cada vez que o \textit{daemon} é inicia execução este ficheiro é temporariamente decifrado(e cifrado novamente) com recurso à função:
+Esta verificação prévia visa garantir que o utilizador tem permissão para aceder ao sistema de ficheiros, sendo o conjunto de utilizadores nestas 
+condições armazenados no ficheiro \texttt{mellon\_acl.enc} que se encontra cifrado, via AES em modo CBC, por forma a garantir a sua integridade e 
+confidencialidade. Cada vez que o \textit{daemon} inicia a sua execução este ficheiro é temporariamente decifrado(e cifrado novamente) com recurso 
+à função:
 \begin{Verbatim}
 int encrypt_decrypt(char *source, int enc_dec)
 \end{Verbatim}
 que invoca a ferramenta OpenSSL:
 \begin{Verbatim}
-#define DEC "openssl enc -aes-256-cbc -in %s.enc -out %s.txt -K %s -iv %s -d"
-#define ENC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s && rm %s.txt"
+#define DEC "openssl enc -aes-256-cbc -in %s -out %s -K %s -iv %s -d"
+#define ENC "openssl enc -aes-256-cbc -in %s -out %s -K %s -iv %s && rm %s"
 \end{Verbatim}
 
-A autenticação de utilizadores é ainda feita a cada invocação da \textit{system call} \texttt{open} que, através da API disponibilizada pela biblioteca
-libfuse, envolve uma chamada à função \texttt{mellon\_open}. A cada invocação esta função gera um código aleatório de 4 caractéres:
+Adicionalmente, a cada invocação da \textit{system call} \texttt{open} que, através da API disponibilizada pela biblioteca
+libfuse, envolve uma chamada à função \texttt{mellon\_open}, é requerido ao utilizador que introduza um código aleatório de 4 caractéres:
 \begin{Verbatim}
 getentropy(buf, sizeof(char)*4);
 \end{Verbatim}
 que é enviado para o endereço de correio eletrónico do utilizador, recorrendo para isso à biblioteca \texttt{libcurl}.
-Este valor é depois transferido através de um \textit{named pipe} para o\textit{daemon}, após ter sido introduzido pelo utilizador 
+Este valor é depois transferido, através de um \textit{named pipe}, para o\textit{daemon}, após ter sido introduzido pelo utilizador 
 no \textit{frontend}:
 \begin{Verbatim}
 gettimeofday(&start, NULL);
 read(mellon_fifo_fd, user_code, 4);
 gettimeofday(&end, NULL);
+\end{Verbatim}
+A autenticação terá sucesso se:
+\begin{itemize}
+    \item o tempo entre o envio do código e a sua introdução não exceder 45s
+    \item o valor introduzido corresponder ao valor efetivamente enviado ao utilizador (\texttt{fa\_code})
+\end{itemize}
 
+\begin{Verbatim}
 //Timeout if user takes more than 45 secs do input code
 if(end.tv_sec - start.tv_sec < 45 && !strcmp(user_code, fa_code))
 \end{Verbatim}
-Para ser autenticado com sucesso o valor introduzido pelo utilizador deve cumprir os seguintes requisitos:
-\begin{itemize}
-    \item foi gerado nos últimos 45s
-    \item corresponde ao valor efetivamente enviado ao utilizador (\texttt{fa\_code})
-\end{itemize}
 
 \subsection{Utilização}
 A página inicial da aplicação inclui uma breve descrição da mesma.
@@ -152,17 +154,17 @@ A aplicação desenvolvida recorre às seguintes bibliotecas:
 
 \section{Conclusão}
 O sistema de controlo de acesso desenvolvido, apesar de funcional e eficaz, apresenta-se como uma implementação primitiva e 
-com poucas considerações para diversos ataques visando apenas demonstrar uma possível solução para o problema de controlo de
-acesso.
+com poucas considerações para diversos aspetos que o podem tornar vulnerável a diversas ameaças, visando apenas demonstrar 
+uma possível solução para o problema de controlo de acesso.
 Das diversas limitações apresentadas é importante realçar algumas que devem servir de ponto de partida para uma implementação mais 
-robusta: 
+robusta:
 \begin{itemize}
     \item a consulta do ficheiro (cifrado) que contém os utilizadores autorizados envolve a criação de um ficheiro, ainda que temporário, 
-    com a informação em formato "limpo", algo que pode permitir a obtenção da informação mesma
+    com a informação em formato "limpo", comprometendo a confidencialidade da mesma
     \item a comunicação via \textit{named pipes} entre as duas componentes desenvolvidas não apresenta mecanismos que garantam a sua 
-    confidencialidade nem integridade, o que pode permitir a um atacante intercetar esta comunicação e realizar um ataque conhecido como 
+    confidencialidade nem integridade permitindo que um atacante intercete a comunicação realizando um ataque conhecido como 
     \textit{Man in the Middle} 
 \end{itemize}
-Apesar destas limitações a implementação proposta representa um ponto de partida robusto que visa ser conveniente para os seus utilizadores
-e eficaz na mediação que efetua.
+Apesar destas limitações a implementação proposta uma base sólida para um mecanismo de controlo de acesso que vise ser conveniente para 
+os seus utilizadores e eficaz na mediação que efetua.
 \end{document}

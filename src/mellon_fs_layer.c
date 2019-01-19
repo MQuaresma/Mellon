@@ -1,9 +1,4 @@
-/**
- * 
- *
- */
-
-#include "mellon.h"
+#include "mellon_fs_layer.h"
 /**
  * Initial configurations for file system:
  *      - disable caching of various inode related info
@@ -162,7 +157,6 @@ int mellon_readlink(const char *path, char *buffer, size_t size){
     }else return -errno;
 }
 
-
 /**
  * Create/touch files
  */
@@ -174,73 +168,6 @@ int mellon_create(const char *file_name, mode_t mode, struct fuse_file_info *fi)
 
     fi->fh = fd;
     return 0;
-}
-
-/**
- * Generate random number between 0000 and 9999
- * and send it to the current user
- * returns -1 if error occurs
- */
-int send2FACode(char *buf){
-    char *email_body = (char*)malloc(sizeof(char)*(strlen(POST_BODY)+strlen(current_user.email)+strlen(FROM)+4));
-    CURL *curl;   
-    CURLcode res = CURLE_OK;
-    struct curl_slist *header_params = NULL;
-
-    curl = curl_easy_init();
-
-    if(curl){
-        getentropy(buf, sizeof(char)*4);
-        for(int i = 0; i < 4; i ++)
-            *(buf+i) = (*(buf+i) % 10) + 48;      //convert random bytes in ascii numbers
-    
-        sprintf(email_body, POST_BODY, current_user.email, FROM, buf);
-
-        curl_easy_setopt(curl, CURLOPT_URL, "https://api.sendgrid.com/v3/mail/send");
-        header_params = curl_slist_append(header_params, "Authorization: Bearer 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");
-        header_params = curl_slist_append(header_params, "Content-Type: application/json");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_params);
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, email_body);
-        
-        res = curl_easy_perform(curl);
-        free(email_body);
-        if(res!=CURLE_OK){
-            fprintf(stderr, "Couldn't send email address to: %s : (%s)\n", current_user.email, curl_easy_strerror(res));
-            return -1;
-        }
-        curl_easy_cleanup(curl);
-    }
-
-    curl_global_cleanup();
-    return 0;
-}
-
-/*
- * Called when opening a file for reading/writing/appending
- */
-int mellon_open(const char *file_name, struct fuse_file_info *fi){
-    int fh;
-    char fa_code[5], user_code[5];
-    struct timeval start, end;
-    user_code[4]=0;
-
-    if(!send2FACode(fa_code)){
-        gettimeofday(&start, NULL);
-        read(mellon_fifo_fd, user_code, 4);
-        gettimeofday(&end, NULL);
-
-        //Timeout if user takes more than 45 secs do input code
-        if(end.tv_sec - start.tv_sec < 45 && !strcmp(user_code, fa_code)){
-            fh = open(file_name, fi->flags);
-            if(fh!=-1){
-                fi->fh = fh;        //update current file handler
-                return 0;
-            }
-        }
-    }
-    
-    return -errno;
 }
 
 /*
@@ -335,72 +262,52 @@ int mellon_unlink(const char *path){
 	else return 0;
 }
 
-int encrypt_decrypt(char *source, int enc_dec){
-    char *payload; 
-    if(enc_dec){ //decrypt
-        payload = (char*)malloc(sizeof(char)*(strlen(DEC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
-        sprintf(payload, DEC, source, source, AES_KEY, AES_IV);
-    }else{      //encrypt
-        payload = (char*)malloc(sizeof(char)*(strlen(ENC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
-        sprintf(payload, ENC, source, source, AES_KEY, AES_IV, source);
-    }
+/*
+ * Called when opening a file for reading/writing/appending
+ */
+int mellon_open(const char *file_name, struct fuse_file_info *fi){
+    int fh;
+    char fa_code[5], user_code[5];
+    struct timeval start, end;
+    user_code[4]=0;
 
-    system(payload);
-    free(payload);
-    return 1;
-}
+    if(!send2FACode(fa_code)){
+        gettimeofday(&start, NULL);
+        read(mellon_fifo_fd, user_code, 4);
+        gettimeofday(&end, NULL);
 
-int searchAndUpdate(char *source){
-    FILE *acl_file = fopen(source, "r");
-    char *acl_entry=NULL;
-    int rd, ret_val=-1;
-    size_t in_len=0;
-
-    if(acl_file){
-        while((rd=getline(&acl_entry, &in_len, acl_file))!=-1){
-            if(!strcmp(strtok(acl_entry, ":"), current_user.u_name))
-                break;
-            free(acl_entry);
-        }
-
-        fclose(acl_file);
-        if(rd==-1){
-            if(!strcmp(current_user.master_key, AES_KEY) && (acl_file = fopen(source, "a"))){
-                fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
-                fflush(acl_file);
-                fclose(acl_file);
-                ret_val=0;
+        //Timeout if user takes more than 45 secs do input code
+        if(end.tv_sec - start.tv_sec < 45 && !strcmp(user_code, fa_code)){
+            fh = open(file_name, fi->flags);
+            if(fh!=-1){
+                fi->fh = fh;        //update current file handler
+                return 0;
             }
-        }else{
-            acl_entry[rd-1]=0;                              //remove new line character
-            current_user.email = strdup(strtok(NULL, ":"));
-            free(acl_entry);
-            ret_val=0;
         }
     }
-    encrypt_decrypt("mellon_acl", 0);
-    return ret_val;
+    
+    return -errno;
 }
-
 
 int main(int argc, char *argv[]){
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    // Dummy values
     current_user.u_name = strdup("m");
     current_user.email = strdup("m");
     current_user.master_key = strdup("m");
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
-    else if(encrypt_decrypt("mellon_acl", 1)){
-        mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
-        if(!searchAndUpdate("mellon_acl.txt")){
-            umask(0);
-            fuse_main(args.argc, args.argv, &mellon_ops, NULL);
-            fuse_opt_free_args(&args);
-            return 0;
-        }else{
-            fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
-            return -1;
-        }
+
+    encrypt_decrypt(ENC_FILE, 1);
+    mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
+    if(!searchAndUpdate(TXT_FILE)){
+        umask(0);
+        fuse_main(args.argc, args.argv, &mellon_ops, NULL);
+        fuse_opt_free_args(&args);
+        return 0;
+    }else{
+        fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
+        return -1;
     }
 }

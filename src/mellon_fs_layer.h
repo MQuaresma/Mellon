@@ -1,24 +1,11 @@
 #define FUSE_USE_VERSION 31
+#include "mellon_common_layer.h"
 #include<fuse.h>
-#include<stdio.h>
-#include<stdlib.h>
 #include<stddef.h>
 #include<errno.h>
-#include<unistd.h>
-#include<string.h>
 #include<fcntl.h>
 #include<dirent.h>
-#include<curl/curl.h>
 #include<sys/time.h>
-#include<sys/file.h>
-
-#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"MellonFS Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
-#define FROM "miguelmirq@gmail.com"
-#define AES_KEY "123456789"
-#define AES_IV "0987654321"
-#define DEC "openssl enc -aes-256-cbc -in %s.enc -out %s.txt -K %s -iv %s -d"
-#define ENC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s && rm %s.txt"
-
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
 int mellon_statfs(const char*, struct statvfs *);
@@ -51,20 +38,13 @@ int mellon_mknod(const char *, mode_t, dev_t);
 int mellon_symlink(const char *, const char *);
 int mellon_unlink(const char *);
 
-
-int send2FACode(char *);
-
 struct current_dir{
     DIR* dirp;
     struct dirent *d_entry;
     int offset;
 };
 
-struct trusted_user{
-    char *u_name;
-    char *email;
-    char *master_key;
-};
+int mellon_fifo_fd;
 
 static const struct fuse_operations mellon_ops = {
     .init       = mellon_init,
@@ -105,7 +85,3 @@ static const struct fuse_opt mellon_flags[] = {
     {"--master_key=%s", offsetof(struct trusted_user, master_key), 1},
     FUSE_OPT_END
 };
-
-static struct trusted_user current_user;
-
-int mellon_fifo_fd;

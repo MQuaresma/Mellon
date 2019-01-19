@@ -22,7 +22,7 @@ def login():
 def init_fs_daemon():
     global mellon_fifo
     global mellon_fs
-    args=['./bin/mellon', '../MountPoint']
+    args=['./bin/mellon', 'MellonFS']
     uname = request.form['username']
     if uname:
         args.append('--user='+uname)

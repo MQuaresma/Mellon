@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse3 -L/usr/local/lib/x86_64-linux-gnu
-LINKERFLAGS=-lcurl -lfuse3 -lpthread 
+CFLAGS=-Wall `pkg-config libcurl fuse3 --cflags`
+LINKERFLAGS=`pkg-config libcurl fuse3 --libs`
 SRC_DIR=src
 BIN_DIR=bin
 FS=mellon
@@ -10,12 +10,11 @@ FS=mellon
 check_dirs:
 	@mkdir -p $(BIN_DIR)
 
-$(SRC_DIR)/$(FS) : $(SRC_DIR)/$(FS).c
-	$(CC) $(CFLAGS) $(SRC_DIR)/$(FS).c -o $(FS) $(LINKERFLAGS)
+$(SRC_DIR)/$(FS) :
+	$(CC) $(CFLAGS) $(SRC_DIR)/mellon_auth_layer.c $(SRC_DIR)/mellon_fs_layer.c -o $(FS) $(LINKERFLAGS)
 
 all: check_dirs $(SRC_DIR)/$(FS)
 	mv $(FS) $(BIN_DIR)
 
 clean:
 	rm -rf $(BIN_DIR)
-
