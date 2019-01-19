@@ -42,4 +42,7 @@ bin/**
 **/._**
 
 ## Others
-Handout.pdf
+**/*.aux
+**/*.log
+**/*.pdf
+**/*.toc

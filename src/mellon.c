@@ -264,8 +264,10 @@ int main(int argc, char *argv[]){
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
-
-    umask(0); //remove all restrictions
-    fuse_main(args.argc, args.argv, &mellon_ops, NULL);
-    fuse_opt_free_args(&args);
+    else{
+          
+        umask(0); //remove all restrictions
+        fuse_main(args.argc, args.argv, &mellon_ops, NULL);
+        fuse_opt_free_args(&args);
+    }
 }
