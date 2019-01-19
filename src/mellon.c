@@ -254,8 +254,16 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
     return (bytes_w == -1 ? -errno : bytes_w);
 }
 
+int decrypt(){
+
+}
+
 
 int main(int argc, char *argv[]){
+    FILE *acl_fd = fopen("mellon_acl", "rw");
+    int rd;
+    char *acl_entry;
+    size_t in_len;
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
     mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
     
@@ -265,7 +273,22 @@ int main(int argc, char *argv[]){
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
     else{
-          
+        while((rd=getline(&acl_entry, &in_len, acl_fd) != -1))
+            if(strstr(acl_entry, current_user.u_name)==acl_entry)
+                break;
+
+        fclose(acl_fd);
+
+        if(rd!=-1){
+            fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
+            return 1;
+        }else{
+            strtok(acl_entry, ":");
+            current_user.email = strdup(strtok(NULL, ":"));
+        }
+
+        if(acl_entry) free(acl_entry);
+
         umask(0); //remove all restrictions
         fuse_main(args.argc, args.argv, &mellon_ops, NULL);
         fuse_opt_free_args(&args);

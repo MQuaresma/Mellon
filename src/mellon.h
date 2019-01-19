@@ -2,7 +2,6 @@
 #ifdef __APPLE__
 #include<fuse/fuse_darwin.h>
 #include<sys/stat.h>
-#include<fuse/fuse.h>
 #include<fuse/fuse_common_compat.h>
 #include<sys/random.h>
 #endif
@@ -17,7 +16,11 @@
 #include<dirent.h>
 #include<curl/curl.h>
 #include <sys/time.h>
+#include<openssl/aes.h>
 
+#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
+#define FROM "miguelmirq@gmail.com"
+#define ACL_KEY "weak_key"
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
 int mellon_statfs(const char*, struct statvfs *);
@@ -36,8 +39,6 @@ int mellon_open(const char *, struct fuse_file_info *);
 int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 
-#define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
-#define FROM "miguelmirq@gmail.com"
 int send2FACode(char *);
 
 struct current_dir{
