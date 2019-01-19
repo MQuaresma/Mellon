@@ -302,8 +302,6 @@ int getUserEmail(char *source){
 
 int main(int argc, char *argv[]){
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-   
-    mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
     current_user.u_name = strdup("m");
     current_user.email = strdup("m");
     current_user.master_key = strdup("m");
@@ -313,6 +311,7 @@ int main(int argc, char *argv[]){
     else if(encrypt_decrypt("mellon_acl", 1)){
         if(!getUserEmail("mellon_acl.txt")){
             encrypt_decrypt("mellon_acl", 0);
+            mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
             umask(0);
             fuse_main(args.argc, args.argv, &mellon_ops, NULL);
             fuse_opt_free_args(&args);
