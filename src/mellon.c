@@ -282,7 +282,7 @@ int getUserEmail(char *source){
 
         fclose(acl_file);
         if(rd==-1){
-            if(!strcmp(current_user.admin_key, AES_KEY) && (acl_file = fopen(source, "a"))){
+            if(!strcmp(current_user.master_key, AES_KEY) && (acl_file = fopen(source, "a"))){
                 fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
                 fflush(acl_file);
                 fclose(acl_file);
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]){
     mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
     current_user.u_name = strdup("m");
     current_user.email = strdup("m");
-    current_user.admin_key = strdup("m");
+    current_user.master_key = strdup("m");
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;

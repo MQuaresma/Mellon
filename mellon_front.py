@@ -24,9 +24,9 @@ def init_fs_daemon():
     email = request.form['email']
     if email:
         email = '--email='+email
-    key = request.form['reg_key']
+    key = request.form['master_key']
     if key:
-        key = "--key_reg="+key
+        key = "--master_key="+key
     mellon_fs = Popen(['./bin/mellon', '../MountPoint', uname, email, key])
     mellon_fifo = open("mellon_fifo", "w")
 

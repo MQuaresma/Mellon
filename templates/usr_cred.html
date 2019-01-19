@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Login</title>
+        <title> MellonFS </title>
     </head>
     <body>
-        <h1>Login</h1>
+        <h1>MellonFS - Login</h1>
         
         <form method="POST">
             <label>Username: </label>
@@ -13,10 +13,22 @@
             <label>Email(Optional): </label>
             <input type="email" name="email">
             <br>
-            <label>Reg Key(Optional): </label>
-            <input type="text" name="reg_key">
+            <label>Master Key(Optional): </label>
+            <input type="text" name="master_key">
             <br><br>
             <input type="submit" value="Login">
         </form>
+
+        <h2>Usage</h2>
+        <p>
+            MellonFS is a filesystem implemented in libfuse with enhanced authentication mechanisms.
+            Each time an open system call is invoked, a temporary code will be sent to your designated
+            email which you should insert in the <b>Authentication Code</b> menu.
+            <h3>Existing Users</h3>
+            To start the daemon insert your Username and press "Login".
+            <h3>New Users</h3>
+            To register as a new user fill in the Username and Email fields and insert the Master Key.
+            By pressing the "Login" button the daemon will be started automatically.
+        </p>
 </body>
 </html>

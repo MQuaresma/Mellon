@@ -54,7 +54,7 @@ struct current_dir{
 struct trusted_user{
     char *u_name;
     char *email;
-    char *admin_key;
+    char *master_key;
 };
 
 static const struct fuse_operations mellon_ops = {
@@ -79,7 +79,7 @@ static const struct fuse_operations mellon_ops = {
 static const struct fuse_opt mellon_flags[] = {
     {"--user=%s", offsetof(struct trusted_user, u_name), 1},
     {"--email=%s", offsetof(struct trusted_user, email), 1},
-    {"--key_reg=%s", offsetof(struct trusted_user, admin_key), 1},
+    {"--master_key=%s", offsetof(struct trusted_user, master_key), 1},
     FUSE_OPT_END
 };
 
