@@ -9,7 +9,8 @@
 #include<fcntl.h>
 #include<dirent.h>
 #include<curl/curl.h>
-#include <sys/time.h>
+#include<sys/time.h>
+#include<sys/file.h>
 
 #define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"MellonFS Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
 #define FROM "miguelmirq@gmail.com"
@@ -40,6 +41,9 @@ int mellon_truncate(const char *, off_t, struct fuse_file_info *);
 int mellon_readbuf(const char *, struct fuse_bufvec **, size_t, off_t, struct fuse_file_info *);
 int mellon_writebuf(const char *, struct fuse_bufvec *,off_t, struct fuse_file_info *);
 int mellon_flush(const char *, struct fuse_file_info *);
+#ifdef HAVE_LIBULOCKMGR
+int mellon_lock(const char *, struct fuse_file_info *, int, struct flock *);
+#endif
 int mellon_flock(const char *, struct fuse_file_info *, int);
 int mellon_release(const char *, struct fuse_file_info *);
 int mellon_fsync(const char *, int, struct fuse_file_info *);
@@ -59,30 +63,33 @@ struct trusted_user{
 };
 
 static const struct fuse_operations mellon_ops = {
-    .init = mellon_init,
-    .statfs = mellon_statfs,
-    .access = mellon_access,
-    .getattr = mellon_getattr,                  
-    .chown = mellon_chown,
-    .chmod = mellon_chmod,
-    .mkdir = mellon_mkdir,
-    .rmdir = mellon_rmdir,
-    .opendir = mellon_opendir, 
-    .readdir = mellon_readdir,
-    .readlink = mellon_readlink,
+    .init       = mellon_init,
+    .statfs     = mellon_statfs,
+    .access     = mellon_access,
+    .getattr    = mellon_getattr,                  
+    .chown      = mellon_chown,
+    .chmod      = mellon_chmod,
+    .mkdir      = mellon_mkdir,
+    .rmdir      = mellon_rmdir,
+    .opendir    = mellon_opendir, 
+    .readdir    = mellon_readdir,
+    .readlink   = mellon_readlink,
     .releasedir = mellon_releasedir,
-    .rename = mellon_rename,
-    .create = mellon_create,
-    .open = mellon_open,
-    .read = mellon_read,
-    .write = mellon_write,
-    .truncate = mellon_truncate,
-    .read_buf	= mellon_readbuf,
-    .write_buf = mellon_writebuf,
-    .flush = mellon_flush,
+    .rename     = mellon_rename,
+    .create     = mellon_create,
+    .open       = mellon_open,
+    .read       = mellon_read,
+    .write      = mellon_write,
+    .truncate   = mellon_truncate,
+    .read_buf   = mellon_readbuf,
+    .write_buf  = mellon_writebuf,
+    .flush      = mellon_flush,
+    #ifdef HAVE_LIBULOCKMGR
+    .lock		= mellon_lock,
+    #endif
     .flock		= mellon_flock,
     .release	= mellon_release,
-	.fsync		= mellon_fsync
+	.fsync		= mellon_fsync,
 };
 
 static const struct fuse_opt mellon_flags[] = {

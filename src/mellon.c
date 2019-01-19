@@ -145,7 +145,7 @@ int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t
 
 int mellon_releasedir(const char *path, struct fuse_file_info *fi){
     struct current_dir *cdir = (struct current_dir *) (uintptr_t)fi->fh;
-    closedir(cdir);
+    closedir(cdir->dirp);
     free(cdir);
     return 0;
 }
@@ -294,6 +294,11 @@ int mellon_flush(const char *path, struct fuse_file_info *fi){
 		return -errno;
 	return 0;
 }
+#ifdef HAVE_LIBULOCKMGR
+int xmp_lock(const char *path, struct fuse_file_info *fi, int cmd, struct flock *lock){
+	return ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner, sizeof(fi->lock_owner));
+}
+#endif
 
 int mellon_flock(const char *path, struct fuse_file_info *fi, int op){
     if(flock(fi->fh, op) == -1)
@@ -303,6 +308,7 @@ int mellon_flock(const char *path, struct fuse_file_info *fi, int op){
 
 int mellon_release(const char *path, struct fuse_file_info *fi){
     close(fi->fh);
+    return 0;
 }
 
 int mellon_fsync(const char *path, int isdatasync, struct fuse_file_info *fi){
