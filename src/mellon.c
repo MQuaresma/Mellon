@@ -143,6 +143,13 @@ int mellon_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t
     return 0;
 }
 
+int mellon_releasedir(const char *path, struct fuse_file_info *fi){
+    struct current_dir *cdir = (struct current_dir *) (uintptr_t)fi->fh;
+    closedir(cdir);
+    free(cdir);
+    return 0;
+}
+
 /**
  * Read symbolic/hard links
  */
@@ -252,6 +259,56 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
     int bytes_w = pwrite(fi->fh, buf, size, offset);
 
     return (bytes_w == -1 ? -errno : bytes_w);
+}
+
+int mellon_truncate(const char *path, off_t size, struct fuse_file_info *fi){
+	if((fi && ftruncate(fi->fh, size)!=-1) || truncate(path, size))
+        return 0;
+    else return -errno;
+}
+
+int mellon_readbuf(const char *path, struct fuse_bufvec **bufp, size_t size, off_t offset, struct fuse_file_info *fi){
+    struct fuse_bufvec *temp  = malloc(sizeof(struct fuse_bufvec));
+	if(temp){
+        *temp = FUSE_BUFVEC_INIT(size);
+	    (temp->buf[0]).flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
+	    (temp->buf[0]).fd = fi->fh;
+	    (temp->buf[0]).pos = offset;
+	    *bufp = temp;
+        return 0;
+    }else return -ENOMEM;
+}
+
+int mellon_writebuf(const char *path, struct fuse_bufvec *buf,off_t offset, struct fuse_file_info *fi){
+ 	struct fuse_bufvec tmp = FUSE_BUFVEC_INIT(fuse_buf_size(buf));
+
+	tmp.buf[0].flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
+	tmp.buf[0].fd = fi->fh;
+	tmp.buf[0].pos = offset;
+
+	return fuse_buf_copy(&tmp, buf, FUSE_BUF_SPLICE_NONBLOCK);   
+}
+
+int mellon_flush(const char *path, struct fuse_file_info *fi){
+    if(close(dup(fi->fh) == -1))
+		return -errno;
+	return 0;
+}
+
+int mellon_flock(const char *path, struct fuse_file_info *fi, int op){
+    if(flock(fi->fh, op) == -1)
+		return -errno;
+	return 0;
+}
+
+int mellon_release(const char *path, struct fuse_file_info *fi){
+    close(fi->fh);
+}
+
+int mellon_fsync(const char *path, int isdatasync, struct fuse_file_info *fi){
+	if(fsync(fi->fh == -1))
+		return -errno;
+	return 0;
 }
 
 int encrypt_decrypt(char *source, int enc_dec){

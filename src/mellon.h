@@ -30,11 +30,19 @@ int mellon_rmdir(const char *);
 int mellon_readdir(const char *, void *, fuse_fill_dir_t, off_t, struct fuse_file_info *, enum fuse_readdir_flags);
 int mellon_readlink(const char *, char *, size_t);
 int mellon_opendir(const char *, struct fuse_file_info *);
+int mellon_releasedir(const char *, struct fuse_file_info *);
 int mellon_rename(const char*, const char*, unsigned int);
 int mellon_create(const char *, mode_t , struct fuse_file_info *);
 int mellon_open(const char *, struct fuse_file_info *);
 int mellon_read(const char *, char *, size_t, off_t, struct fuse_file_info *);
 int mellon_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
+int mellon_truncate(const char *, off_t, struct fuse_file_info *);
+int mellon_readbuf(const char *, struct fuse_bufvec **, size_t, off_t, struct fuse_file_info *);
+int mellon_writebuf(const char *, struct fuse_bufvec *,off_t, struct fuse_file_info *);
+int mellon_flush(const char *, struct fuse_file_info *);
+int mellon_flock(const char *, struct fuse_file_info *, int);
+int mellon_release(const char *, struct fuse_file_info *);
+int mellon_fsync(const char *, int, struct fuse_file_info *);
 
 int send2FACode(char *);
 
@@ -62,11 +70,19 @@ static const struct fuse_operations mellon_ops = {
     .opendir = mellon_opendir, 
     .readdir = mellon_readdir,
     .readlink = mellon_readlink,
+    .releasedir = mellon_releasedir,
     .rename = mellon_rename,
     .create = mellon_create,
     .open = mellon_open,
     .read = mellon_read,
-    .write = mellon_write
+    .write = mellon_write,
+    .truncate = mellon_truncate,
+    .read_buf	= mellon_readbuf,
+    .write_buf = mellon_writebuf,
+    .flush = mellon_flush,
+    .flock		= mellon_flock,
+    .release	= mellon_release,
+	.fsync		= mellon_fsync
 };
 
 static const struct fuse_opt mellon_flags[] = {

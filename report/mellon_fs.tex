@@ -34,12 +34,9 @@
 
     Miguel Miranda Quaresma A77049 \\[0.25cm]
 
-    \today
+    \today \\[5cm]
+    \tableofcontents
 \end{titlepage}
-
-\newpage
-
-\tableofcontents
 
 \newpage
 
@@ -66,52 +63,81 @@ tenha sucesso.
 
 \subsection{Implementação}
 \subsubsection{Web Frontend}
-A \textit{webfronted} foi desenvolvido com recurso à linguagem Python e à framework \textit{Flask}.
+O \textit{fronted} foi desenvolvida com recurso à linguagem Python e à framework \textit{Flask}.
 É esta a componente que deve ser invocada para iniciar o \textit{daemon} do sistema de ficheiros e autenticar o utilizador cada vez que este pretende abrir um 
 ficheiro. Antes de inicializar o \textit{daemon}, o \textit{frontend} requisita o \textit{username} ao utilizador, que permitirá determinar se este está 
-autorizado a alterar ficheiros no sistema de desenvolvido. De seguida este valor é passado ao \textit{daemon} como argumento de linha de comandos:
+autorizado a alterar ficheiros no sistema desenvolvido. De seguida este valor é passado ao \textit{daemon} como argumento de linha de comandos:
 \begin{Verbatim}
-mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user='+uname, '--email='+email])
+args=['./bin/mellon', '../MountPoint']
+...
+mellon_fs = Popen(args)
 \end{Verbatim}
-Qualquer comunicação subsequente entre os dois processos é efetuada com recurso a um \textit{named pipe} disponibilizado por sistemas Unix: 
+Qualquer comunicação subsequente entre os dois processos é efetuada com recurso a um \textit{named pipe} que é aberto para escrita no \textit{frontend}:
 \begin{Verbatim}
 mellon_fifo = open("mellon_fifo", "w")
+mellon_fifo = open("mellon_fifo", "w")
 ...
-mellon_fifo.write(code[:5])
-mellon_fifo.flush()
-\end{Verbatim}
-A \textit{web frontend} foi desenvolvido com recurso à biblioteca \textit{Flask} e possui duas \textit{views} uma para identificação inicial e outra para 
-autenticação \textit{on demand}.
-
-\subsubsection{File system daemon}
-O sistema de ficheiros em si foi desenvolvido em C e é responsável por implementar as funções que são invocadas consoante as \textit{system calls} envolvidas 
-nas operações em ficheiros (\texttt{open, close, write, read, ...}). Para isso a biblioteca \textit{libfuse} dispõe de uma estrutura do tipo \texttt{struct
-fuse\_operations} que permite registar as funções de \textit{callback}. No caso da chamada \texttt{open} foi desenvolvida a função \texttt{mellon\_open} que,
-a cada invocação, gera um código aleatório de 4 caractéres, com recurso à função \texttt{getentropy}:
-\begin{Verbatim}
-getentropy(buf, sizeof(char)*4);
-\end{Verbatim}
-Este código é enviado para o endereço de correio eletrónico do utilizador, recorrendo para isso à biblioteca \texttt{libcurl}.
-Após o envio do mesmo, o utilizador deve introduzir o valor recebido no \textit{frontend}, que é enviado, através de um \textit{named pipe}, para o 
-\textit{daemon}:
-\begin{Verbatim}
 if request.method == 'POST':
     code = request.form['fa_code']
     mellon_fifo.write(code[:5])
     mellon_fifo.flush()
 \end{Verbatim}
-O \textit{daemon}, após receber este valor, verifica se o mesmo ainda é válido(\textbf{i.e.} se foi gerado nos últimos 45s) e em caso afirmativo, verifica
-se corresponde ao valor efetivamente enviado ao utilizador, autenticado o mesmo em caso de sucesso:
+
+Este módulo foi desenvolvido com recurso à biblioteca \textit{Flask} e possui duas \textit{views} distintas: uma para identificação inicial e outra para 
+autenticação \textit{on demand}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{Pictures/Main.png}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=10cm]{Pictures/Auth.png}
+\end{figure}
+
+\subsubsection{File system daemon}
+O sistema de ficheiros em si foi desenvolvido em C e implementa as funções que são invocadas consoante as \textit{system calls} feitas ao sistemas 
+(\texttt{open, close, write, read, ...}). Para isso a biblioteca \textit{libfuse} dispõe de uma estrutura do tipo \texttt{struct
+fuse\_operations} que permite registar as funções para cada um dos casos \textit{callback}. No caso da \textit{system call} \texttt{open} foi 
+desenvolvida a função \texttt{mellon\_open} que, a cada invocação, gera um código aleatório de 4 caractéres, com recurso à função \texttt{getentropy}:
+\begin{Verbatim}
+getentropy(buf, sizeof(char)*4);
+\end{Verbatim}
+Este código é enviado para o endereço de correio eletrónico do utilizador, recorrendo para isso à biblioteca \texttt{libcurl}.
+Após o envio do mesmo, o utilizador deve introduzir o valor recebido no \textit{frontend}, que é enviado através de um \textit{named pipe}, para o 
+\textit{daemon}:
 \begin{Verbatim}
 gettimeofday(&start, NULL);
 read(mellon_fifo_fd, user_code, 4);
 gettimeofday(&end, NULL);
 
 //Timeout if user takes more than 45 secs do input code
-if(end.tv_sec - start.tv_sec < 45 && !strcmp(user_code, fa_code)){
+if(end.tv_sec - start.tv_sec < 45 && !strcmp(user_code, fa_code))
 \end{Verbatim}
-\subsection{Utilização}
+Para ser autenticado com sucesso, o valor introduzido pelo utilizador deve cumprir os seguintes requisitos:
+\begin{itemize}
+    \item foi gerado nos últimos 45s
+    \item corresponde ao valor efetivamente enviado ao utilizador (\texttt{fa\_code})
+\end{itemize}
 
+O mecanismo de autenticação envolve ainda uma verificação prévia que visa garantir que o utilizador 
+tem permissão para aceder ao sistema de ficheiros, sendo que o conjunto de utilizadores nestas condições
+se encontram armazenados no ficheiro \texttt{mellon\_acl.enc}.
+Para garantir a confidencialidade desta informação, e que a mesma apenas pode ser alterada por quem tem autorização,
+o ficheiro encontra-se cifrado com recurso à cifra AES em modo CBC com recurso à ferramenta OpenSSL:
+\begin{Verbatim}
+    #define DEC "openssl enc -aes-256-cbc -in %s.enc -out %s.txt -K %s -iv %s -d"
+    #define ENC "openssl enc -aes-256-cbc -in %s.txt -out %s.enc -K %s -iv %s && rm %s.txt"
+\end{Verbatim}
+Cada vez que o \textit{daemon} é iniciado, este ficheiro é temporariamente decifrado e, após o utilizador ter sido (ou não)
+autenticado, este é atualizado, com ecurso à função:
+\begin{Verbatim}
+int encrypt_decrypt(char *source, int enc_dec)
+\end{Verbatim}
+
+\subsection{Utilização}
+A página inicial da aplicação inclui uma breve descrição da mesma.
 \section{Conclusão}
 
 \end{document}
