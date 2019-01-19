@@ -256,12 +256,14 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
 
 int encrypt_decrypt(char *source, int enc_dec){
     char *payload; 
-    if(enc_dec)
+    if(enc_dec){ //decrypt
         payload = (char*)malloc(sizeof(char)*(strlen(DEC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
-    else
+        sprintf(payload, DEC, source, source, AES_KEY, AES_IV);
+    }else{      //encrypt
         payload = (char*)malloc(sizeof(char)*(strlen(ENC)+strlen(source)+strlen(AES_KEY)+strlen(AES_IV)));
+        sprintf(payload, ENC, source, source, AES_KEY, AES_IV);
+    }
 
-    sprintf(payload, ENC, source, source, AES_KEY, AES_IV);
     system(payload);
     free(payload);
     return 1;
@@ -311,7 +313,7 @@ int main(int argc, char *argv[]){
     else if(encrypt_decrypt("mellon_acl", 1)){
         if(!getUserEmail("mellon_acl.txt")){
             encrypt_decrypt("mellon_acl", 0);
-            umask(0); //remove all restrictions
+            umask(0);
             fuse_main(args.argc, args.argv, &mellon_ops, NULL);
             fuse_opt_free_args(&args);
         }else

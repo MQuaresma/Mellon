@@ -18,16 +18,17 @@ def login():
 
 def init_fs_daemon():
     global mellon_fifo
+    args=['./bin/mellon', '../MountPoint']
     uname = request.form['username']
     if uname:
-        uname = '--user='+uname
+        args.append('--user='+uname)
     email = request.form['email']
     if email:
-        email = '--email='+email
-    key = request.form['master_key']
+        args.append('--email='+email)
+    key = request.form['reg_key']
     if key:
-        key = "--master_key="+key
-    mellon_fs = Popen(['./bin/mellon', '../MountPoint', uname, email, key])
+        args.append('--master_key='+key)
+    mellon_fs = Popen(args)
     mellon_fifo = open("mellon_fifo", "w")
 
 @APP.route('/auth', methods=['GET', 'POST'])
