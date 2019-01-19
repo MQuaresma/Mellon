@@ -254,43 +254,58 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
     return (bytes_w == -1 ? -errno : bytes_w);
 }
 
-int decrypt(){
+FILE *decrypt(char *source){
+    FILE *src = fopen(source, "rw");
+    //decrypt
+    return src;
+}
 
+int getUserEmail(FILE *acl_file){
+    char *acl_entry=NULL;
+    int rd;
+    size_t in_len=0;
+
+    while((rd=getline(&acl_entry, &in_len, acl_file)) != -1){
+        if(strstr(acl_entry, current_user.u_name)==acl_entry)
+            break;
+        //free(acl_entry);
+    }
+
+    if(rd==-1){
+        if(!strcmp(current_user.admin_key, "m"))
+            fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
+        else return -1;
+    }else{
+        acl_entry[rd-1]=0;                              //remove new line character
+        strtok(acl_entry, ":");
+        current_user.email = strdup(strtok(NULL, ":"));
+        free(acl_entry);
+        return 0;
+    }
 }
 
 
 int main(int argc, char *argv[]){
-    FILE *acl_fd = fopen("mellon_acl", "rw");
-    int rd;
-    char *acl_entry;
-    size_t in_len;
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    FILE *acl_fd = decrypt("mellon_acl");
+   
     mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
-    
     current_user.u_name = strdup("m");
     current_user.email = strdup("m");
+    current_user.admin_key = strdup("m");
 
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
-    else{
-        while((rd=getline(&acl_entry, &in_len, acl_fd) != -1))
-            if(strstr(acl_entry, current_user.u_name)==acl_entry)
-                break;
-
-        fclose(acl_fd);
-
-        if(rd!=-1){
-            fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
-            return 1;
+    else if(acl_fd){
+        //search for user
+        if(!getUserEmail(acl_fd)){
+            fclose(acl_fd);
+            umask(0); //remove all restrictions
+            fuse_main(args.argc, args.argv, &mellon_ops, NULL);
+            fuse_opt_free_args(&args);
         }else{
-            strtok(acl_entry, ":");
-            current_user.email = strdup(strtok(NULL, ":"));
+            fclose(acl_fd);
+            fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
         }
-
-        if(acl_entry) free(acl_entry);
-
-        umask(0); //remove all restrictions
-        fuse_main(args.argc, args.argv, &mellon_ops, NULL);
-        fuse_opt_free_args(&args);
     }
 }

@@ -20,7 +20,11 @@
 
 #define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
 #define FROM "miguelmirq@gmail.com"
-#define ACL_KEY "weak_key"
+#define AES_KEY "1234567890"
+#define AES_IV "0987654321"
+#define ENC "openssl enc -aes-256-cbc -in test.enc -K  -iv "
+#define D_ENC "openssl enc -aes-256-cbc -in test.enc -K  -iv -d"
+
 
 void *mellon_init(struct fuse_conn_info *, struct fuse_config *);
 int mellon_statfs(const char*, struct statvfs *);
@@ -50,6 +54,7 @@ struct current_dir{
 struct trusted_user{
     char *u_name;
     char *email;
+    char *admin_key;
 };
 
 static const struct fuse_operations mellon_ops = {
@@ -71,16 +76,13 @@ static const struct fuse_operations mellon_ops = {
     .write = mellon_write
 };
 
-
 static const struct fuse_opt mellon_flags[] = {
     {"--user=%s", offsetof(struct trusted_user, u_name), 1},
     {"--email=%s", offsetof(struct trusted_user, email), 1},
+    {"--reg_key=%s", offsetof(struct trusted_user, admin_key), 1},
     FUSE_OPT_END
 };
 
 static struct trusted_user current_user;
 
 int mellon_fifo_fd;
-/*struct trusted_user acl[10] = {
-    {strdup("miguel"), strdup("miguelmirq@gmail.com")}
-};*/
