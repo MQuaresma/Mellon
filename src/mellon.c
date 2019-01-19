@@ -262,7 +262,7 @@ int mellon_write(const char *file_name, const char *buf, size_t size, off_t offs
 }
 
 int mellon_truncate(const char *path, off_t size, struct fuse_file_info *fi){
-	if((fi && ftruncate(fi->fh, size)!=-1) || truncate(path, size))
+	if((fi && ftruncate(fi->fh, size)!=-1) || truncate(path, size) != -1)
         return 0;
     else return -errno;
 }
@@ -315,6 +315,24 @@ int mellon_fsync(const char *path, int isdatasync, struct fuse_file_info *fi){
 	if(fsync(fi->fh == -1))
 		return -errno;
 	return 0;
+}
+
+int mellon_mknod(const char *path, mode_t mode, dev_t rdev){
+	if((S_ISFIFO(mode) && mkfifo(path, mode)!=-1) || mknod(path, mode, rdev)!=-1)
+	    return 0;
+	else return -errno;
+}
+
+int mellon_symlink(const char *from, const char *to){
+	if (symlink(from, to) == -1)
+		return -errno;
+	else return 0;
+}
+
+int mellon_unlink(const char *path){
+	if (unlink(path) == -1)
+		return -errno;
+	else return 0;
 }
 
 int encrypt_decrypt(char *source, int enc_dec){

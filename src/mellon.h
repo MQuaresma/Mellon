@@ -47,6 +47,10 @@ int mellon_lock(const char *, struct fuse_file_info *, int, struct flock *);
 int mellon_flock(const char *, struct fuse_file_info *, int);
 int mellon_release(const char *, struct fuse_file_info *);
 int mellon_fsync(const char *, int, struct fuse_file_info *);
+int mellon_mknod(const char *, mode_t, dev_t);
+int mellon_symlink(const char *, const char *);
+int mellon_unlink(const char *);
+
 
 int send2FACode(char *);
 
@@ -90,6 +94,9 @@ static const struct fuse_operations mellon_ops = {
     .flock		= mellon_flock,
     .release	= mellon_release,
 	.fsync		= mellon_fsync,
+    .mknod      = mellon_mknod,
+    .symlink    = mellon_symlink,
+    .unlink     = mellon_unlink
 };
 
 static const struct fuse_opt mellon_flags[] = {
