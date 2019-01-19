@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse3 -L/usr/local/lib/x86_64-linux-gnu
-LINKERFLAGS=-lcurl -lfuse3 -lpthread -lssl -lcrypto
+LINKERFLAGS=-lcurl -lfuse3 -lpthread 
 SRC_DIR=src
 BIN_DIR=bin
 FS=mellon

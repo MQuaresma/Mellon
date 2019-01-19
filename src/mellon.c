@@ -269,10 +269,10 @@ int encrypt_decrypt(char *source, int enc_dec){
     return 1;
 }
 
-int getUserEmail(char *source){
+int searchAndUpdate(char *source){
     FILE *acl_file = fopen(source, "r");
     char *acl_entry=NULL;
-    int rd;
+    int rd, ret_val=-1;
     size_t in_len=0;
 
     if(acl_file){
@@ -288,15 +288,17 @@ int getUserEmail(char *source){
                 fprintf(acl_file, "%s:%s\n", current_user.u_name, current_user.email);
                 fflush(acl_file);
                 fclose(acl_file);
-            } else return -1;
+                ret_val=0;
+            }
         }else{
             acl_entry[rd-1]=0;                              //remove new line character
             current_user.email = strdup(strtok(NULL, ":"));
             free(acl_entry);
+            ret_val=0;
         }
-        return 0;
     }
-    return -1;
+    encrypt_decrypt("mellon_acl", 0);
+    return ret_val;
 }
 
 
@@ -309,13 +311,15 @@ int main(int argc, char *argv[]){
     if(fuse_opt_parse(&args, &current_user, mellon_flags, NULL) == -1)
         return 1;
     else if(encrypt_decrypt("mellon_acl", 1)){
-        if(!getUserEmail("mellon_acl.txt")){
-            encrypt_decrypt("mellon_acl", 0);
-            mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
+        mellon_fifo_fd = open("mellon_fifo", O_RDONLY);
+        if(!searchAndUpdate("mellon_acl.txt")){
             umask(0);
             fuse_main(args.argc, args.argv, &mellon_ops, NULL);
             fuse_opt_free_args(&args);
-        }else
+            return 0;
+        }else{
             fprintf(stderr, "Access attempt by unauthorized user detected, exiting...\n");
+            return -1;
+        }
     }
 }

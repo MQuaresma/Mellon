@@ -38,7 +38,7 @@ def init_fs_daemon():
 @APP.route('/auth', methods=['GET', 'POST'])
 def auth():
     if mellon_fs.poll():
-        close(mellon_fifo)
+        mellon_fifo.close()
         return redirect(url_for('login'))
     else: 
         if request.method == 'POST':

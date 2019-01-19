@@ -1,10 +1,4 @@
 #define FUSE_USE_VERSION 31
-#ifdef __APPLE__
-#include<fuse/fuse_darwin.h>
-#include<sys/stat.h>
-#include<fuse/fuse_common_compat.h>
-#include<sys/random.h>
-#endif
 #include<fuse.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -16,7 +10,6 @@
 #include<dirent.h>
 #include<curl/curl.h>
 #include <sys/time.h>
-#include<openssl/aes.h>
 
 #define POST_BODY "{\"personalizations\": [{\"to\": [{\"email\": \"%s\"}]}],\"from\": {\"email\": \"%s\"},\"subject\": \"MellonFS Auth Code\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]}"
 #define FROM "miguelmirq@gmail.com"
