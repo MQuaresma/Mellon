@@ -6,7 +6,6 @@ from flask import Flask, request, render_template, redirect, url_for
 APP = Flask(__name__)
 os.mkfifo("mellon_fifo")
 
-mellon_fs = None
 mellon_fifo = None
 
 @APP.route('/', methods=['POST', 'GET'])
@@ -18,19 +17,17 @@ def login():
         return redirect(url_for('auth'))
 
 def init_fs_daemon():
+    global mellon_fifo
     uname = request.form['username']
-    print(uname)
     email = request.form['email']
-    print(email)
-    #mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user='+uname, '--email='+email])
-    #mellon_fifo = open("mellon_fifo", "w")
+    mellon_fs = Popen(['./bin/mellon', '../MountPoint', '--user='+uname, '--email='+email])
+    mellon_fifo = open("mellon_fifo", "w")
 
 @APP.route('/auth', methods=['GET', 'POST'])
 def auth():
     if request.method == 'POST':
         code = request.form['fa_code']
-        print(code)
-        mellon_fifo.write(code)
+        mellon_fifo.write(code[:5])
         mellon_fifo.flush()
     return render_template('authin.html')
 

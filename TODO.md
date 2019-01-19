@@ -9,7 +9,7 @@
 ## Features
 - [x] ACL mapping user:email
 - [x] Send auth code via email
-- [ ] Web interface to insert auth code
+- [x] Web interface to insert auth code
 - [ ] Store ACL mapping with integrity protection
 - [ ] User registration via master password
 

@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuges]{babel}
+\usepackage[a4paper, total={7in, 9in}]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+
+\newcommand{\question}[1]{
+    {\large \textbf{Q: #1}}
+    \\
+}
+
+\newcommand{\titleRule}{
+    \rule{\linewidth}{0.5mm} \\ [0.25cm]
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \center
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=4cm]{Pictures/UM_EENG.jpg}
+    \end{figure}
+    \textsc{\LARGE Universidade do Minho} \\ [1.5cm]
+    \textsc{\Large Mestrado Integrado em Engenharia Informática} \\ [0.5cm]
+    \textsc{\large Tecnologia de Segurança} \\ [0.5cm]
+
+    \titleRule
+    {\huge \bfseries MellonFS - Userspace Filesystem com libfuse}
+    \titleRule
+
+    Miguel Miranda Quaresma A77049 \\[0.25cm]
+
+    \today
+\end{titlepage}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introdução}
+A utilização de sistemas de computação tem vindo a tornar-se um requisito cada vez mais fundamental nas mais diversas áreas da sociedade. Consequentemente, é necessário garantir que os mesmos representam uma plataforma de trabalho segura que não comprometa os serviços que neles dependem. Um aspetos fundamentais para atingir esse objetivo passa por controlar o acesso de diversos utilizadores aos ficheiros presentes nos sistemas, sendo necessário desenvolver mecanismos que sejam não só seguros e convenientes mas também adequados às necessidades apresentadas.
+O sistema de permissões Unix apresenta portanto uma clara desvantagem: a sua simplicicade torna-o pouco flexível e difícil de gerir para um utilizador "normal". Para colmatar este facto torna-se útil desenvolver sistemas de ficheiros a um nível mais elevado que recorram a estruturas de controlo de acesso complexas, permitindo assim implementar um sistema de controlo eficaz. O presente trabalho apresenta um implementação primitiva de um mecanismo de controlo de acesso com recurso à biblioteca libfuse que visa autenticar utilizadores com recurso a um código aleatório.
+
+\section{libfuse}
+Como foi referido o presente projeto recorre à biblioteca \textit{libfuse} que é uma API para o módulo \textbf{FUSE} do kernel Linux que permite o desenvolvimento de sistemas de ficheiros em \textit{userspace}.
+
+\section{MellonFS}
+O sistema de ficheiros desenvolvido, designado MellonFS, apresenta duas grandes componentes e foi desenvolvido com recurso a duas linguagens de programação: Python e C.
+A primeira componente, responsável por iniciar o \textit{daemon} do sistema de ficheiros e, paralelamente, gerar a \textit{interface} de utilizador foi desenvolvido com recurso à linguagem Python e à biblioteca Flask, para gerar uma front-end web que permita ao utilizador inserir as suas credenciais e, a pedido, os códigos de autenticação.
+O sistema de ficheiros em si foi desenvolvido em C e é responsável por implementar as funções que são invocadas consoante as operações efetuadas no sistema de ficheiros. Adicionalmente este componente é responsável pela geração do código (aleatório) que permitirá a autenticação do utilizador e pelo envio do mesmo para o endereço de correio eletrónico correspondente.
+\subsection{Implementação}
+
+\subsection{Utilização}
+
+\section{Conclusão}
+
+\end{document}
