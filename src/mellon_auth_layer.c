@@ -20,7 +20,7 @@ int send2FACode(char *buf){
         sprintf(email_body, POST_BODY, current_user.email, current_user.email, buf);
 
         curl_easy_setopt(curl, CURLOPT_URL, "https://api.sendgrid.com/v3/mail/send");
-        header_params = curl_slist_append(header_params, "Authorization: Bearer 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");
+        header_params = curl_slist_append(header_params, "Authorization: Bearer");
         header_params = curl_slist_append(header_params, "Content-Type: application/json");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_params);
 
