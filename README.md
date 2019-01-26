@@ -1,5 +1,7 @@
 # MellonFS
-MellonFS is a file system implemented on top of [libfuse](https://github.com/libfuse/libfuse).
-This file system aims to improve access control mechanisms by adding 2FA.
-Each file maintains a list of allowed users and a contact information to which an access code is sent 
-each time a user wishes to open a given file.
+MellonFS is a userspace file system implemented on top of the FUSE kernel module via 
+[libfuse](https://github.com/libfuse/libfuse).
+The file system aims to improve access control mechanisms by adding two factor authentication.
+A list of allowed users, and respective emails, is kept on an encrypted file (using AES in CBC mode) 
+and each time an open system call is issued, a code is randomly generated and sent to the email of
+the user that issued the system call to authenticate the request.
