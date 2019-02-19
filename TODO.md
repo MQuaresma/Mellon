@@ -11,7 +11,7 @@
 - [x] Send auth code via email
 - [x] Web interface to insert auth code
 - [ ] Store ACL mapping with integrity protection
-- [ ] User registration via master password
+- [x] User registration via master password
 
 ## FIX
 - [x] List links: `.` and `..`
@@ -22,4 +22,5 @@
 - [x] Use cryptographically secure RNG
 
 ## QoF
-- [ ] Organize code in different files
+- [x] Organize code in different files
+- [ ] Document code
